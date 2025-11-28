@@ -44,6 +44,8 @@
         padding: 2rem 2.25rem 2.5rem;
       }
     }
+
+    /* HEADER */
     .header {
       display: flex;
       flex-wrap: wrap;
@@ -93,7 +95,9 @@
       background: #22c55e;
       box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
       display: inline-block;
+      margin-right: 0.35rem;
     }
+
     .badges-row {
       display: flex;
       flex-wrap: wrap;
@@ -116,6 +120,8 @@
       border-radius: 999px;
       background: #22c55e;
     }
+
+    /* SUMMARY CARDS */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -158,6 +164,8 @@
       opacity: 0.8;
       margin-top: 0.15rem;
     }
+
+    /* TABLE */
     .table-card {
       border-radius: 1rem;
       border: 1px solid rgba(148, 163, 184, 0.4);
@@ -196,6 +204,14 @@
       color: #e5e7eb;
       min-width: 140px;
     }
+    .search-input::placeholder {
+      color: #6b7280;
+    }
+
+    .table-scroll {
+      max-height: 60vh;
+      overflow: auto;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -207,6 +223,12 @@
       white-space: nowrap;
       text-align: right;
       border-bottom: 1px solid rgba(31, 41, 55, 0.95);
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: linear-gradient(to right, #020617, #020617 25%, #020617);
     }
     th:first-child, td:first-child {
       text-align: left;
@@ -238,15 +260,17 @@
       opacity: 1;
       color: #38bdf8;
     }
+
     tbody tr:nth-child(even) {
       background: rgba(15, 23, 42, 0.9);
     }
     tbody tr:nth-child(odd) {
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.85);
     }
     tbody tr:hover {
       background: rgba(37, 99, 235, 0.35);
     }
+
     .player-cell {
       display: flex;
       flex-direction: column;
@@ -254,28 +278,43 @@
       line-height: 1.2;
     }
     .player-main {
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 600;
     }
     .player-sub {
       font-size: 0.72rem;
       color: #9ca3af;
     }
-    .error {
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      color: #fecaca;
-      background: rgba(127, 29, 29, 0.5);
-      border-radius: 0.75rem;
-      padding: 0.6rem 0.75rem;
-      border: 1px solid rgba(248, 113, 113, 0.7);
+
+    /* TOP PLAYER HIGHLIGHT */
+    .top-player-row {
+      border-left: 3px solid #facc15;
+      box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.2);
+      background: radial-gradient(circle at left, rgba(250, 204, 21, 0.12), rgba(15, 23, 42, 0.95));
     }
+    .top-player-badge {
+      font-size: 0.65rem;
+      color: #facc15;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    tfoot td {
+      font-weight: 600;
+      background: radial-gradient(circle at top, #020617, #020617 70%);
+      border-top: 1px solid rgba(148, 163, 184, 0.6);
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+    }
+
     .loading {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
       font-size: 0.78rem;
       color: #9ca3af;
+      margin-top: 0.6rem;
     }
     .spinner {
       width: 10px;
@@ -292,14 +331,15 @@
 </head>
 <body>
   <div class="app">
-
     <header class="header">
       <div class="title-block">
         <div class="title">
           Mysters Rocket League
           <span class="title-accent">Live Stats</span>
         </div>
-        <p class="subtitle">Auto-updating stats from Google Sheets</p>
+        <p class="subtitle">
+          Esports-style leaderboard, powered directly by your Google Sheet.
+        </p>
       </div>
       <div class="season-tag">
         <span class="status-dot"></span> LIVE SYNC
@@ -307,9 +347,9 @@
     </header>
 
     <div class="badges-row">
-      <div class="pill"><span class="dot"></span>Updates instantly</div>
-      <div class="pill">↕ Sort any column</div>
-      <div class="pill">🔍 Search players</div>
+      <div class="pill"><span class="dot"></span>Live Google Sheets data</div>
+      <div class="pill">↕ Click a header to sort</div>
+      <div class="pill">🔍 Search by Discord / Epic</div>
     </div>
 
     <section class="summary-grid" id="summaryGrid"></section>
@@ -318,9 +358,8 @@
       <div class="table-header-row">
         <div>
           <div class="table-title">Player Leaderboard</div>
-          <div class="table-subtitle" id="playerCountLabel">Loading…</div>
+          <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
-
         <div class="controls">
           <input id="searchInput" class="search-input" placeholder="Search…" />
         </div>
@@ -335,70 +374,138 @@
       </div>
     </section>
 
-    <div id="statusBox" class="loading" style="margin-top:10px;">
-      <span class="spinner"></span> Fetching live data…
+    <div id="statusBox" class="loading">
+      <span class="spinner"></span>
+      <span>Fetching live data from Google Sheets…</span>
     </div>
-
-    <div id="errorBox" class="error" style="display:none;"></div>
   </div>
 
   <script>
+    // Live CSV export from your published sheet/tab
     const SHEET_CSV_URL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-    let rawData = [];
-    let filteredData = [];
-    let headers = [];
-    let sortState = { key: null, dir: "desc" };
+    // Column configuration for esports-style layout
+    const COLUMN_CONFIG = [
+      { id: "discord", label: "Discord", possibleHeaders: ["Discord"], role: "playerMain" },
+      { id: "epic", label: "Epic", possibleHeaders: ["Epic"], role: "playerSub" },
+      { id: "gp", label: "GP", possibleHeaders: ["GP", "Games", "Games Played"] },
+      { id: "points", label: "Points", possibleHeaders: ["Points"] },
+      { id: "goals", label: "Goals", possibleHeaders: ["Goals"] },
+      { id: "assists", label: "Assists", possibleHeaders: ["Assists"] },
+      { id: "saves", label: "Saves", possibleHeaders: ["Saves"] },
+      { id: "shots", label: "Shots", possibleHeaders: ["Shots"] },
+      { id: "gw", label: "GW", possibleHeaders: ["GW"] },
+      { id: "gl", label: "GL", possibleHeaders: ["GL"] },
+      { id: "mvps", label: "MVPs", possibleHeaders: ["MVPs", "MVP"] },
+      { id: "ppg", label: "Av. PPG", possibleHeaders: ["Av. PPG", "PPG"] },
+      { id: "gaRatio", label: "GA Ratio", possibleHeaders: ["GA Ratio"] },
+      { id: "gsRatio", label: "GS Ratio", possibleHeaders: ["GS Ratio"] },
+      { id: "gsPct", label: "GS %", possibleHeaders: ["GS %", "GS%"] }
+    ];
+
+    let allRows = [];
+    let players = [];
+    let filteredPlayers = [];
+    let sortState = { id: null, dir: "desc" };
+    let topPlayerDiscord = null;
 
     const tableHead = document.getElementById("tableHead");
     const tableBody = document.getElementById("tableBody");
     const tableFoot = document.getElementById("tableFoot");
-    const statusBox = document.getElementById("statusBox");
-    const errorBox = document.getElementById("errorBox");
     const summaryGrid = document.getElementById("summaryGrid");
     const searchInput = document.getElementById("searchInput");
+    const statusBox = document.getElementById("statusBox");
     const playerCountLabel = document.getElementById("playerCountLabel");
 
     function setStatus(msg) {
-      statusBox.innerHTML = `<span class="spinner"></span> ${msg}`;
+      statusBox.innerHTML =
+        '<span class="spinner"></span><span>' + msg + "</span>";
     }
 
-    function showError(msg) {
-      errorBox.style.display = "block";
-      errorBox.textContent = msg;
+    function cleanNumericString(val) {
+      if (val === null || val === undefined) return "";
+      const s = String(val).trim();
+      if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
+      return s;
     }
 
-    function parseNum(val) {
-      const n = parseFloat(String(val).replace(/[^\d.-]/g, ""));
+    function parseNumber(val) {
+      if (val === null || val === undefined) return 0;
+      const s = String(val);
+      const m = s.match(/-?\d+(\.\d+)?/);
+      if (!m) return 0;
+      const n = parseFloat(m[0]);
       return isNaN(n) ? 0 : n;
     }
 
-    function buildHeaders() {
+    function mapColumns(headerKeys) {
+      COLUMN_CONFIG.forEach(cfg => {
+        cfg.sourceKey = null;
+        const targets = cfg.possibleHeaders.map(h => h.toLowerCase().trim());
+        for (const hk of headerKeys) {
+          if (targets.includes(hk.toLowerCase().trim())) {
+            cfg.sourceKey = hk;
+            break;
+          }
+        }
+      });
+    }
+
+    function getCfg(id) {
+      return COLUMN_CONFIG.find(c => c.id === id);
+    }
+
+    function getVal(row, id) {
+      const cfg = getCfg(id);
+      if (!cfg || !cfg.sourceKey) return "";
+      return row[cfg.sourceKey];
+    }
+
+    function identifyTopPlayer() {
+      const pointsCfg = getCfg("points");
+      const gpCfg = getCfg("gp");
+      if (!pointsCfg || !pointsCfg.sourceKey) return;
+
+      let bestPoints = -Infinity;
+      let bestDiscord = null;
+
+      players.forEach(row => {
+        const gp = gpCfg && gpCfg.sourceKey ? parseNumber(row[gpCfg.sourceKey]) : 0;
+        const pts = parseNumber(row[pointsCfg.sourceKey]);
+        if (gp > 0 && pts >= bestPoints) {
+          bestPoints = pts;
+          bestDiscord = getVal(row, "discord");
+        }
+      });
+
+      topPlayerDiscord = bestDiscord;
+    }
+
+    function buildTableHead() {
       tableHead.innerHTML = "";
       const row = document.createElement("tr");
 
-      headers.forEach((key) => {
-        const th = document.createElement("th");
-        th.dataset.key = key;
+      COLUMN_CONFIG.forEach(cfg => {
+        if (!cfg.sourceKey) return; // skip columns not in sheet
 
-        th.innerHTML = `
-          <span class="label">
-            ${key}
-            <span class="sort-indicator">↕</span>
-          </span>
-        `;
+        const th = document.createElement("th");
+        th.dataset.colId = cfg.id;
+        th.innerHTML =
+          '<span class="label">' +
+          cfg.label +
+          '<span class="sort-indicator">↕</span></span>';
 
         th.addEventListener("click", () => {
-          if (sortState.key === key) {
+          if (sortState.id === cfg.id) {
             sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
           } else {
-            sortState.key = key;
+            sortState.id = cfg.id;
             sortState.dir = "desc";
           }
           applySorting();
           renderBody();
-          updateHeaderSortUI();
+          updateSortClasses();
         });
 
         row.appendChild(th);
@@ -407,48 +514,72 @@
       tableHead.appendChild(row);
     }
 
-    function updateHeaderSortUI() {
-      tableHead.querySelectorAll("th").forEach((th) => {
+    function updateSortClasses() {
+      tableHead.querySelectorAll("th").forEach(th => {
+        const id = th.dataset.colId;
         th.classList.remove("sorted-asc", "sorted-desc");
-        if (th.dataset.key === sortState.key) {
-          th.classList.add(
-            sortState.dir === "asc" ? "sorted-asc" : "sorted-desc"
-          );
+        if (id === sortState.id) {
+          th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
         }
       });
     }
 
     function applySorting() {
-      if (!sortState.key) return;
+      if (!sortState.id) return;
+      const cfg = getCfg(sortState.id);
+      if (!cfg || !cfg.sourceKey) return;
 
-      const key = sortState.key;
-      const dir = sortState.dir;
+      const numeric = !["discord", "epic"].includes(cfg.id);
 
-      filteredData.sort((a, b) => {
-        const aV = parseNum(a[key]);
-        const bV = parseNum(b[key]);
-        return dir === "asc" ? aV - bV : bV - aV;
+      filteredPlayers.sort((a, b) => {
+        const av = a[cfg.sourceKey];
+        const bv = b[cfg.sourceKey];
+
+        if (numeric) {
+          const an = parseNumber(av);
+          const bn = parseNumber(bv);
+          return sortState.dir === "asc" ? an - bn : bn - an;
+        } else {
+          const as = String(av || "").toLowerCase();
+          const bs = String(bv || "").toLowerCase();
+          if (as < bs) return sortState.dir === "asc" ? -1 : 1;
+          if (as > bs) return sortState.dir === "asc" ? 1 : -1;
+          return 0;
+        }
       });
     }
 
     function renderBody() {
       tableBody.innerHTML = "";
 
-      filteredData.forEach((row) => {
+      filteredPlayers.forEach(row => {
         const tr = document.createElement("tr");
 
-        headers.forEach((key, idx) => {
-          const td = document.createElement("td");
+        const isTop = topPlayerDiscord &&
+                      String(getVal(row, "discord")).trim() === String(topPlayerDiscord).trim();
+        if (isTop) {
+          tr.classList.add("top-player-row");
+        }
 
-          if (idx === 0) {
+        COLUMN_CONFIG.forEach((cfg, index) => {
+          if (!cfg.sourceKey) return;
+          const td = document.createElement("td");
+          const raw = getVal(row, cfg.id);
+
+          if (index === 0) {
+            // first column: Discord + Epic + badge
+            const epic = getVal(row, "epic");
             td.innerHTML = `
               <div class="player-cell">
-                <span class="player-main">${row[key]}</span>
-                <span class="player-sub">${row[headers[1]] || ""}</span>
+                <span class="player-main">${raw || ""}</span>
+                <span class="player-sub">${epic || ""}</span>
+                ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
               </div>
             `;
+          } else if (["gaRatio", "gsRatio", "gsPct", "ppg"].includes(cfg.id)) {
+            td.textContent = cleanNumericString(raw);
           } else {
-            td.textContent = row[key];
+            td.textContent = cleanNumericString(raw === undefined ? "" : raw);
           }
 
           tr.appendChild(td);
@@ -457,117 +588,195 @@
         tableBody.appendChild(tr);
       });
 
-      playerCountLabel.textContent = `${filteredData.length} players`;
+      playerCountLabel.textContent = `${filteredPlayers.length} player${
+        filteredPlayers.length === 1 ? "" : "s"
+      }`;
     }
 
     function renderFootTotals() {
       tableFoot.innerHTML = "";
       const tr = document.createElement("tr");
 
-      headers.forEach((key, i) => {
+      COLUMN_CONFIG.forEach((cfg, index) => {
+        if (!cfg.sourceKey) return;
         const td = document.createElement("td");
-        if (i === 0) {
+
+        if (index === 0) {
           td.textContent = "Totals";
         } else {
-          const total = rawData.reduce((sum, row) => sum + parseNum(row[key]), 0);
-          td.textContent = total ? total.toFixed(1).replace(/\.0$/, "") : "";
+          // sum numeric-looking columns only
+          const numeric = !["discord", "epic"].includes(cfg.id);
+          if (!numeric) {
+            td.textContent = "";
+          } else {
+            const sum = players.reduce((acc, row) => acc + parseNumber(row[cfg.sourceKey]), 0);
+            const rounded =
+              Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
+            td.textContent = sum ? String(rounded).replace(/\.0$/, "") : "";
+          }
         }
+
         tr.appendChild(td);
       });
 
       tableFoot.appendChild(tr);
     }
 
-    function buildSummary() {
+    function buildSummaryCards() {
       summaryGrid.innerHTML = "";
 
-      const goalsKey = headers.find((h) => h.toLowerCase() === "goals");
-      const pointsKey = headers.find((h) => h.toLowerCase() === "points");
+      const goalsCfg = getCfg("goals");
+      const pointsCfg = getCfg("points");
+      const shotsCfg = getCfg("shots");
+      const gpCfg = getCfg("gp");
 
-      const totalGoals = rawData.reduce(
-        (sum, row) => sum + parseNum(row[goalsKey]),
-        0
-      );
-      const totalPoints = rawData.reduce(
-        (sum, row) => sum + parseNum(row[pointsKey]),
-        0
-      );
+      const totalGoals = goalsCfg && goalsCfg.sourceKey
+        ? players.reduce((acc, r) => acc + parseNumber(r[goalsCfg.sourceKey]), 0)
+        : 0;
+
+      const totalPoints = pointsCfg && pointsCfg.sourceKey
+        ? players.reduce((acc, r) => acc + parseNumber(r[pointsCfg.sourceKey]), 0)
+        : 0;
+
+      const totalShots = shotsCfg && shotsCfg.sourceKey
+        ? players.reduce((acc, r) => acc + parseNumber(r[shotsCfg.sourceKey]), 0)
+        : 0;
+
+      const totalGames = gpCfg && gpCfg.sourceKey
+        ? players.reduce((acc, r) => acc + parseNumber(r[gpCfg.sourceKey]), 0)
+        : 0;
+
+      const avgGoalsPerGame = totalGames ? (totalGoals / totalGames).toFixed(2) : "—";
+      const shotPct =
+        totalGoals && totalShots ? ((totalGoals / totalShots) * 100).toFixed(1) + "%" : "—";
+      const avgPoints =
+        totalPoints && players.length ? (totalPoints / players.length).toFixed(1) : "0";
 
       const cards = [
-        { label: "Total Goals", value: totalGoals, sub: "Across all players" },
-        { label: "Total Points", value: totalPoints, sub: "Leaderboard total" },
+        {
+          label: "Total Goals",
+          value: totalGoals,
+          sub: totalGames ? avgGoalsPerGame + " goals per game" : "Across all players"
+        },
+        {
+          label: "Total Points",
+          value: totalPoints,
+          sub: "Leaderboard combined score"
+        },
         {
           label: "Roster Size",
-          value: rawData.length,
-          sub: "Players in this sheet",
+          value: players.length,
+          sub: "Players on this tab"
         },
         {
-          label: "Avg Points",
-          value: totalPoints && rawData.length ? (totalPoints / rawData.length).toFixed(1) : "0",
-          sub: "Per player",
-        },
+          label: "Average Points",
+          value: avgPoints,
+          sub: "Per player"
+        }
       ];
 
       cards.forEach((c, i) => {
         const div = document.createElement("div");
         div.className = i % 2 === 0 ? "summary-card" : "summary-card alt";
-        div.innerHTML = `
-          <div class="summary-label">${c.label}</div>
-          <div class="summary-value">${c.value}</div>
-          <div class="summary-sub">${c.sub}</div>
-        `;
+        div.innerHTML =
+          '<div class="summary-label">' +
+          c.label +
+          '</div><div class="summary-value">' +
+          c.value +
+          '</div><div class="summary-sub">' +
+          c.sub +
+          "</div>";
         summaryGrid.appendChild(div);
       });
     }
 
-    function filterData() {
-      const q = searchInput.value.toLowerCase();
-      filteredData = rawData.filter((row) =>
-        Object.values(row).some((v) =>
-          String(v).toLowerCase().includes(q)
-        )
-      );
+    function applySearchFilter() {
+      const term = (searchInput.value || "").toLowerCase().trim();
+      if (!term) {
+        filteredPlayers = [...players];
+      } else {
+        filteredPlayers = players.filter(row => {
+          const d = String(getVal(row, "discord") || "").toLowerCase();
+          const e = String(getVal(row, "epic") || "").toLowerCase();
+          return d.includes(term) || e.includes(term);
+        });
+      }
       applySorting();
       renderBody();
+      updateSortClasses();
     }
 
-    searchInput.addEventListener("input", filterData);
+    searchInput.addEventListener("input", applySearchFilter);
 
     function loadSheet() {
-      setStatus("Fetching data…");
+      setStatus("Fetching live data from Google Sheets…");
 
       Papa.parse(SHEET_CSV_URL, {
         download: true,
         header: true,
-        complete: (results) => {
-          const rows = results.data;
-          rawData = rows.filter((r) =>
-            Object.values(r).some((v) => String(v).trim() !== "")
+        skipEmptyLines: true,
+        complete: results => {
+          const rows = results.data || [];
+
+          // remove totally empty rows
+          allRows = rows.filter(r =>
+            Object.values(r).some(v => String(v || "").trim() !== "")
           );
 
-          if (!rawData.length) {
-            showError("The sheet is empty or missing data.");
+          if (!allRows.length) {
+            setStatus("Sheet loaded, but no data rows found.");
             return;
           }
 
-          headers = Object.keys(rawData[0]);
+          const headerKeys = results.meta && results.meta.fields
+            ? results.meta.fields
+            : Object.keys(allRows[0]);
 
-          buildHeaders();
-          buildSummary();
+          mapColumns(headerKeys);
 
-          filteredData = [...rawData];
-          sortState.key = headers[2] || headers[0];
+          const discordCfg = getCfg("discord");
+          const epicCfg = getCfg("epic");
+
+          // Filter out totals row + duplicate header row
+          players = allRows.filter(row => {
+            const d = discordCfg && discordCfg.sourceKey
+              ? String(row[discordCfg.sourceKey] || "").trim()
+              : "";
+            const e = epicCfg && epicCfg.sourceKey
+              ? String(row[epicCfg.sourceKey] || "").trim()
+              : "";
+
+            const lowerD = d.toLowerCase();
+
+            if (!d && !e) return false;                 // empty line
+            if (lowerD.includes("whole team")) return false; // sheet totals row
+            if (d === "Discord" || e === "Epic") return false; // repeat header row
+            return true;
+          });
+
+          if (!players.length) {
+            setStatus("No player rows found.");
+            return;
+          }
+
+          identifyTopPlayer();
+          buildTableHead();
+          buildSummaryCards();
+
+          filteredPlayers = [...players];
+          sortState.id = "points";  // default sort by points
+          sortState.dir = "desc";
           applySorting();
-
           renderBody();
           renderFootTotals();
-          updateHeaderSortUI();
+          updateSortClasses();
 
           setStatus("Live data loaded.");
         },
-        error: () => {
-          showError("Failed to load Google Sheet.");
-        },
+        error: err => {
+          console.error(err);
+          setStatus("Failed to load data from Google Sheets.");
+        }
       });
     }
 
