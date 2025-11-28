@@ -220,3 +220,286 @@
 
     .pill {
       padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 0.68rem;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div>
+        <div class="title">
+          Mysters Rocket League
+          <span class="badge">Live Table (Static Demo)</span>
+        </div>
+        <p class="subtitle">
+          Player stats from your Google Sheet – goals, assists, saves, and more.
+        </p>
+      </div>
+      <div class="tagline">
+        SEASON STATS • UPDATED FROM SHEET
+      </div>
+    </header>
+
+    <section class="table-wrapper">
+      <div class="table-scroll">
+        <table id="statsTable">
+          <thead>
+            <tr>
+              <th data-sort="none" data-type="text">
+                <span class="label">Discord<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="text">
+                <span class="label">Epic<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">GP<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Points<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Goals<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Assists<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Saves<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Shots<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">GW<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">GL<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">MVPs<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">Av. PPG<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="ratio">
+                <span class="label">GA Ratio<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="ratio">
+                <span class="label">GS Ratio<span class="sort-indicator">↕</span></span>
+              </th>
+              <th data-sort="none" data-type="number">
+                <span class="label">GS %<span class="sort-indicator">↕</span></span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data based on your sheet -->
+            <tr>
+              <td>
+                <div class="player-main">
+                  <span class="player-discord">kinnaird</span>
+                  <span class="player-epic">t.undra</span>
+                </div>
+              </td>
+              <td>t.undra</td>
+              <td>8</td>
+              <td>3424</td>
+              <td>11</td>
+              <td>5</td>
+              <td>9</td>
+              <td>35</td>
+              <td>7</td>
+              <td>1</td>
+              <td>5</td>
+              <td>428</td>
+              <td>2.20:1</td>
+              <td>0.31:1</td>
+              <td>31.42857143</td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="player-main">
+                  <span class="player-discord">fenis006</span>
+                  <span class="player-epic">just fenis.8</span>
+                </div>
+              </td>
+              <td>just fenis.8</td>
+              <td>8</td>
+              <td>2239</td>
+              <td>3</td>
+              <td>3</td>
+              <td>6</td>
+              <td>20</td>
+              <td>7</td>
+              <td>1</td>
+              <td>1</td>
+              <td>279.875</td>
+              <td>1.00:1</td>
+              <td>0.15:1</td>
+              <td>15</td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="player-main">
+                  <span class="player-discord">GameFlame</span>
+                  <span class="player-epic">GameFlame.4</span>
+                </div>
+              </td>
+              <td>GameFlame.4</td>
+              <td>4</td>
+              <td>1691</td>
+              <td>7</td>
+              <td>2</td>
+              <td>5</td>
+              <td>20</td>
+              <td>4</td>
+              <td>0</td>
+              <td>2</td>
+              <td>422.75</td>
+              <td>3.50:1</td>
+              <td>0.35:1</td>
+              <td>35</td>
+            </tr>
+
+            <tr>
+              <td>
+                <div class="player-main">
+                  <span class="player-discord">blackflame0561_32931</span>
+                  <span class="player-epic">cicciorm12 (flameSbriser)</span>
+                </div>
+              </td>
+              <td>cicciorm12 (flameSbriser)</td>
+              <td>4</td>
+              <td>1259</td>
+              <td>3</td>
+              <td>4</td>
+              <td>4</td>
+              <td>16</td>
+              <td>3</td>
+              <td>1</td>
+              <td>0</td>
+              <td>314.75</td>
+              <td>0.75:1</td>
+              <td>0.19:1</td>
+              <td>18.75</td>
+            </tr>
+
+            <!-- Example of a “not yet played” row from your sheet -->
+            <tr>
+              <td>
+                <div class="player-main">
+                  <span class="player-discord">1vexter</span>
+                  <span class="player-epic">V e x t e r</span>
+                </div>
+              </td>
+              <td>V e x t e r</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0</td>
+              <td>0:0</td>
+              <td>0:0</td>
+              <td>0</td>
+            </tr>
+
+            <!-- Add more rows here if your sheet has them -->
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <td>
+                <span class="tag">Whole team – Totals</span>
+              </td>
+              <td></td>
+              <td>24</td>
+              <td>8613</td>
+              <td>24</td>
+              <td>14</td>
+              <td>24</td>
+              <td>91</td>
+              <td>21</td>
+              <td>3</td>
+              <td>8</td>
+              <td>358.875</td>
+              <td>1.71:1</td>
+              <td>0.26:1</td>
+              <td>26.37362637</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      <span>Tip: Click any column header to sort by that stat.</span>
+      <span class="pill">Data source: Mysters Rocket League sheet</span>
+    </div>
+  </div>
+
+  <script>
+    // Simple table sorting
+    (function () {
+      const table = document.getElementById("statsTable");
+      const headers = table.querySelectorAll("thead th");
+
+      headers.forEach((th, index) => {
+        th.addEventListener("click", () => {
+          const type = th.dataset.type || "text";
+          const currentSort = th.dataset.sort || "none";
+          const newSort = currentSort === "asc" ? "desc" : "asc";
+
+          headers.forEach(h => {
+            h.dataset.sort = "none";
+            h.classList.remove("sorted-asc", "sorted-desc");
+          });
+
+          th.dataset.sort = newSort;
+          th.classList.add(newSort === "asc" ? "sorted-asc" : "sorted-desc");
+
+          const tbody = table.querySelector("tbody");
+          const rows = Array.from(tbody.querySelectorAll("tr"));
+
+          const parseValue = (cellText) => {
+            if (type === "number") {
+              const num = parseFloat(cellText.replace(/[^\d.\-]/g, "")) || 0;
+              return num;
+            }
+            if (type === "ratio") {
+              // formats like "2.20:1"
+              const parts = cellText.split(":");
+              const num = parseFloat(parts[0]) || 0;
+              return num;
+            }
+            return cellText.toLowerCase();
+          };
+
+          rows.sort((a, b) => {
+            const aText = a.children[index].innerText.trim();
+            const bText = b.children[index].innerText.trim();
+            const aVal = parseValue(aText);
+            const bVal = parseValue(bText);
+
+            if (aVal < bVal) return newSort === "asc" ? -1 : 1;
+            if (aVal > bVal) return newSort === "asc" ? 1 : -1;
+            return 0;
+          });
+
+          rows.forEach(row => tbody.appendChild(row));
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
