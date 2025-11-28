@@ -14,9 +14,7 @@
       background: #020617;
       color: #e5e7eb;
     }
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 1.5rem 1rem 2.5rem;
@@ -42,7 +40,6 @@
       overflow: hidden;
     }
 
-    /* Floating glow panels */
     .glow {
       position: absolute;
       border-radius: 999px;
@@ -52,21 +49,16 @@
       z-index: -1;
     }
     .glow.blue {
-      width: 280px;
-      height: 280px;
-      top: -80px;
-      right: -60px;
+      width: 280px; height: 280px;
+      top: -80px; right: -60px;
       background: rgba(59,130,246,0.7);
     }
     .glow.teal {
-      width: 300px;
-      height: 300px;
-      bottom: -120px;
-      left: -80px;
+      width: 300px; height: 300px;
+      bottom: -120px; left: -80px;
       background: rgba(45,212,191,0.7);
     }
 
-    /* Header */
     .header {
       display: flex;
       flex-wrap: wrap;
@@ -75,16 +67,8 @@
       gap: 1rem;
       margin-bottom: 1.4rem;
     }
-    .title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
-    .title-line {
-      display: flex;
-      align-items: center;
-      gap: 0.7rem;
-    }
+    .title-block { display: flex; flex-direction: column; gap: 0.35rem; }
+    .title-line { display: flex; align-items: center; gap: 0.7rem; }
     .app-title {
       font-size: clamp(1.8rem, 2.6vw + 1rem, 2.6rem);
       font-weight: 800;
@@ -105,36 +89,27 @@
       gap: 0.4rem;
     }
     .live-dot {
-      width: 8px;
-      height: 8px;
+      width: 8px; height: 8px;
       border-radius: 999px;
       background: #fee2e2;
       box-shadow: 0 0 12px rgba(254,202,202,0.9);
     }
-    .subtitle {
-      font-size: 0.9rem;
-      color: #cbd5f5;
-      opacity: 0.9;
-    }
+    .subtitle { font-size: 0.9rem; color: #cbd5f5; opacity: 0.9; }
     .season-tag {
       font-size: 0.8rem;
       color: #9ca3af;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
+      display: flex; align-items: center; gap: 0.4rem;
       white-space: nowrap;
     }
     .status-dot {
-      width: 7px;
-      height: 7px;
+      width: 7px; height: 7px;
       border-radius: 999px;
       background: #22c55e;
       box-shadow: 0 0 12px rgba(34,197,94,0.9);
     }
 
-    /* Badges row */
     .badges-row {
       display: flex;
       flex-wrap: wrap;
@@ -154,13 +129,11 @@
       backdrop-filter: blur(10px);
     }
     .pill-dot {
-      width: 5px;
-      height: 5px;
+      width: 5px; height: 5px;
       border-radius: 999px;
       background: #60a5fa;
     }
 
-    /* Summary cards */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -168,9 +141,7 @@
       margin-bottom: 1.6rem;
     }
     @media (min-width: 768px) {
-      .summary-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
+      .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
     .summary-card {
       position: relative;
@@ -189,10 +160,9 @@
     .summary-card:nth-child(4) { animation-delay: 1.8s; }
 
     @keyframes floatCard {
-      0%, 100% { transform: translateY(0); }
+      0%,100% { transform: translateY(0); }
       50% { transform: translateY(-4px); }
     }
-
     .summary-label {
       font-size: 0.72rem;
       letter-spacing: 0.16em;
@@ -200,10 +170,7 @@
       color: #bfdbfe;
       margin-bottom: 0.2rem;
     }
-    .summary-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-    }
+    .summary-value { font-size: 1.2rem; font-weight: 700; }
     .summary-sub {
       font-size: 0.72rem;
       color: #e5e7eb;
@@ -212,16 +179,13 @@
     }
     .summary-glow {
       position: absolute;
-      right: -20px;
-      top: -20px;
-      width: 80px;
-      height: 80px;
+      right: -20px; top: -20px;
+      width: 80px; height: 80px;
       background: radial-gradient(circle, rgba(56,189,248,0.8), transparent 55%);
       opacity: 0.45;
       pointer-events: none;
     }
 
-    /* Table section */
     .table-card {
       border-radius: 1.2rem;
       border: 1px solid rgba(148,163,184,0.5);
@@ -237,21 +201,10 @@
       border-bottom: 1px solid rgba(30,64,175,0.7);
       background: radial-gradient(circle at top left, rgba(37,99,235,0.5), rgba(15,23,42,0.95));
     }
-    .table-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-    .table-subtitle {
-      font-size: 0.75rem;
-      color: #cbd5f5;
-      opacity: 0.85;
-    }
-    .controls {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+    .table-title { font-size: 0.95rem; font-weight: 600; }
+    .table-subtitle { font-size: 0.75rem; color: #cbd5f5; opacity: 0.85; }
+    .controls { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+
     .search-input {
       background: rgba(15,23,42,0.9);
       border-radius: 999px;
@@ -264,13 +217,11 @@
       box-shadow: 0 0 0 1px transparent;
       transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
-    .search-input::placeholder {
-      color: #9ca3af;
-    }
+    .search-input::placeholder { color:#9ca3af; }
     .search-input:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
-      background: rgba(15,23,42,1);
+      border-color:#60a5fa;
+      box-shadow:0 0 0 1px rgba(59,130,246,0.7);
+      background:rgba(15,23,42,1);
     }
 
     .status-chip {
@@ -281,31 +232,19 @@
       gap: 0.35rem;
     }
     .tiny-spinner {
-      width: 10px;
-      height: 10px;
+      width: 10px; height: 10px;
       border-radius: 999px;
       border: 2px solid rgba(148,163,184,0.6);
       border-top-color: #60a5fa;
       animation: spin 0.7s linear infinite;
     }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .table-scroll {
-      max-height: 60vh;
-      overflow: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 960px;
-    }
+    .table-scroll { max-height: 60vh; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:960px; }
     thead {
-      position: sticky;
-      top: 0;
-      z-index: 3;
-      background: linear-gradient(to right, #020617, #020617 25%, #020617);
+      position: sticky; top:0; z-index:3;
+      background: linear-gradient(to right,#020617,#020617 25%,#020617);
     }
     th, td {
       padding: 0.55rem 0.7rem;
@@ -315,95 +254,65 @@
       border-bottom: 1px solid rgba(30,64,175,0.4);
     }
     th:first-child, td:first-child {
-      text-align: left;
-      position: sticky;
-      left: 0;
-      background: inherit;
-      z-index: 4;
+      text-align:left;
+      position:sticky; left:0; background:inherit; z-index:4;
     }
-    th:nth-child(2), td:nth-child(2) {
-      text-align: left;
-    }
+    th:nth-child(2), td:nth-child(2) { text-align:left; }
     th {
-      font-weight: 600;
-      color: #9ca3af;
-      cursor: pointer;
-      user-select: none;
+      font-weight:600;
+      color:#9ca3af;
+      cursor:pointer;
+      user-select:none;
     }
-    th .label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
+    th .label { display:inline-flex; align-items:center; gap:0.25rem; }
     .sort-icon {
-      font-size: 0.7rem;
-      opacity: 0.25;
-      transition: opacity 0.15s ease, transform 0.15s ease;
+      font-size:0.7rem;
+      opacity:0.25;
+      transition:opacity 0.15s ease, transform 0.15s ease;
     }
     th.sorted-asc .sort-icon,
     th.sorted-desc .sort-icon {
-      opacity: 1;
-      color: #38bdf8;
+      opacity:1;
+      color:#38bdf8;
     }
-    th.sorted-asc .sort-icon {
-      transform: rotate(180deg);
-    }
+    th.sorted-asc .sort-icon { transform:rotate(180deg); }
 
-    tbody tr:nth-child(even) {
-      background: rgba(15,23,42,0.95);
-    }
-    tbody tr:nth-child(odd) {
-      background: rgba(15,23,42,0.9);
-    }
-    tbody tr:hover {
-      background: rgba(37,99,235,0.35);
-    }
+    tbody tr:nth-child(even) { background:rgba(15,23,42,0.95); }
+    tbody tr:nth-child(odd) { background:rgba(15,23,42,0.9); }
+    tbody tr:hover { background:rgba(37,99,235,0.35); }
 
-    .player-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 0.08rem;
-      line-height: 1.2;
-    }
-    .player-main {
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-    .player-sub {
-      font-size: 0.72rem;
-      color: #9ca3af;
-    }
+    .player-cell { display:flex; flex-direction:column; gap:0.08rem; line-height:1.2; }
+    .player-main { font-size:0.82rem; font-weight:600; }
+    .player-sub { font-size:0.72rem; color:#9ca3af; }
 
     .top-player-row {
-      border-left: 3px solid #facc15;
-      box-shadow: inset 0 0 0 1px rgba(250,204,21,0.25);
-      background: radial-gradient(circle at left, rgba(250,204,21,0.16), rgba(15,23,42,0.96));
+      border-left:3px solid #facc15;
+      box-shadow:inset 0 0 0 1px rgba(250,204,21,0.25);
+      background:radial-gradient(circle at left,rgba(250,204,21,0.16),rgba(15,23,42,0.96));
     }
     .top-player-badge {
-      font-size: 0.65rem;
-      color: #facc15;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      margin-top: 0.05rem;
+      font-size:0.65rem;
+      color:#facc15;
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+      margin-top:0.05rem;
     }
 
     tfoot td {
-      font-weight: 600;
-      background: radial-gradient(circle at top, #020617, #020617 70%);
-      border-top: 1px solid rgba(148,163,184,0.7);
-      position: sticky;
-      bottom: 0;
-      z-index: 2;
+      font-weight:600;
+      background:radial-gradient(circle at top,#020617,#020617 70%);
+      border-top:1px solid rgba(148,163,184,0.7);
+      position:sticky; bottom:0; z-index:2;
     }
 
     .footer-note {
-      margin-top: 0.8rem;
-      font-size: 0.72rem;
-      color: #9ca3af;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+      margin-top:0.8rem;
+      font-size:0.72rem;
+      color:#9ca3af;
+      display:flex;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:0.5rem;
     }
   </style>
 </head>
@@ -438,9 +347,7 @@
       <span class="pill">★ Top player highlighted</span>
     </div>
 
-    <section class="summary-grid" id="summaryGrid">
-      <!-- summary cards injected here -->
-    </section>
+    <section class="summary-grid" id="summaryGrid"></section>
 
     <section class="table-card">
       <div class="table-header-row">
@@ -449,12 +356,7 @@
           <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
         <div class="controls">
-          <input
-            type="text"
-            class="search-input"
-            id="searchInput"
-            placeholder="Search players…"
-          />
+          <input id="searchInput" class="search-input" placeholder="Search players…" />
           <span class="status-chip" id="statusChip">
             <span class="tiny-spinner"></span>
             Fetching live data…
@@ -478,19 +380,17 @@
   </div>
 
   <script>
-    // Live CSV export of your published sheet/tab
     const SHEET_CSV_URL =
       "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-    // Exact ordered columns from your sheet
     const COLS = [
-      "Discord", "Epic", "GP", "Points", "Goals", "Assists", "Saves",
-      "Shots", "GW", "GL", "MVPs", "Av. PPG", "GA Ratio", "GS Ratio", "GS %"
+      "Discord","Epic","GP","Points","Goals","Assists","Saves",
+      "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
     ];
 
     let players = [];
     let filteredPlayers = [];
-    let sortState = { index: 3, dir: "desc" }; // default sort by Points
+    let sortState = { index: 3, dir: "desc" }; // default: Points desc
     let topPlayerDiscord = null;
 
     const tableHead = document.getElementById("tableHead");
@@ -506,7 +406,8 @@
       if (val === undefined || val === null) return 0;
       const s = String(val);
       if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
-      const match = s.match(/-?\\d+(\\.\\d+)?/);
+      // ✅ FIXED: real digit regex
+      const match = s.match(/-?\d+(\.\d+)?/);
       if (!match) return 0;
       const n = parseFloat(match[0]);
       return isNaN(n) ? 0 : n;
@@ -527,10 +428,8 @@
         complete: (results) => {
           let rows = results.data || [];
 
-          // Filter empty rows
           rows = rows.filter(r => r.some(c => String(c).trim() !== ""));
 
-          // Remove totals and duplicate header rows
           rows = rows.filter(r => {
             const first = String(r[0] || "").trim();
             const lower = first.toLowerCase();
@@ -577,7 +476,6 @@
     function identifyTopPlayer() {
       let bestPoints = -Infinity;
       let bestDiscord = null;
-
       players.forEach(p => {
         const gp = parseNumber(p.GP);
         const pts = parseNumber(p.Points);
@@ -586,7 +484,6 @@
           bestDiscord = p.Discord;
         }
       });
-
       topPlayerDiscord = bestDiscord;
     }
 
@@ -635,12 +532,12 @@
 
     function applySorting() {
       filteredPlayers.sort((a, b) => {
-        const keys = Object.keys(a); // consistent order
+        const keys = Object.keys(a); // [Discord,Epic,GP,...]
         const key = keys[sortState.index];
         const av = a[key];
         const bv = b[key];
 
-        const numericCol = sortState.index > 1; // treat first two as text, rest numeric
+        const numericCol = sortState.index > 1; // first two text, rest numeric
 
         if (numericCol) {
           const an = parseNumber(av);
@@ -658,13 +555,12 @@
 
     function renderBody() {
       let html = "";
-      const topDiscord = topPlayerDiscord;
+      const top = topPlayerDiscord;
 
       filteredPlayers.forEach(p => {
-        const isTop = topDiscord && String(p.Discord).trim() === String(topDiscord).trim();
+        const isTop = top && String(p.Discord).trim() === String(top).trim();
         html += `<tr class="${isTop ? "top-player-row" : ""}">`;
 
-        // First cell: Discord + Epic + badge
         html += `
           <td>
             <div class="player-cell">
@@ -675,7 +571,6 @@
           </td>
         `;
 
-        // Rest of stats
         html += `<td>${cleanValue(p.Epic)}</td>`;
         html += `<td>${cleanValue(p.GP)}</td>`;
         html += `<td>${cleanValue(p.Points)}</td>`;
@@ -695,7 +590,6 @@
       });
 
       tableBody.innerHTML = html;
-
       playerCountLabel.textContent =
         `${filteredPlayers.length} player${filteredPlayers.length === 1 ? "" : "s"}`;
     }
@@ -705,26 +599,23 @@
 
       players.forEach(p => {
         const vals = [
-          p.Discord, p.Epic, p.GP, p.Points, p.Goals, p.Assists, p.Saves,
-          p.Shots, p.GW, p.GL, p.MVPs, p.PPG, p.GAR, p.GSR, p.GSP
+          p.Discord,p.Epic,p.GP,p.Points,p.Goals,p.Assists,p.Saves,
+          p.Shots,p.GW,p.GL,p.MVPs,p.PPG,p.GAR,p.GSR,p.GSP
         ];
         vals.forEach((v, idx) => {
-          if (idx <= 1) return; // skip text columns
+          if (idx <= 1) return;
           totals[idx] += parseNumber(v);
         });
       });
 
       let html = "<tr>";
-      COLS.forEach((label, idx) => {
-        if (idx === 0) {
-          html += "<td>Totals</td>";
-        } else if (idx === 1) {
-          html += "<td></td>";
-        } else {
+      COLS.forEach((_, idx) => {
+        if (idx === 0) html += "<td>Totals</td>";
+        else if (idx === 1) html += "<td></td>";
+        else {
           const sum = totals[idx];
-          if (!sum) {
-            html += "<td></td>";
-          } else {
+          if (!sum) html += "<td></td>";
+          else {
             const rounded =
               Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
             html += `<td>${rounded}</td>`;
@@ -732,56 +623,43 @@
         }
       });
       html += "</tr>";
-
       tableFoot.innerHTML = html;
     }
 
     function buildSummaryCards() {
-      const totalGoals = players.reduce((acc, p) => acc + parseNumber(p.Goals), 0);
-      const totalPoints = players.reduce((acc, p) => acc + parseNumber(p.Points), 0);
-      const totalShots = players.reduce((acc, p) => acc + parseNumber(p.Shots), 0);
-      const totalGames = players.reduce((acc, p) => acc + parseNumber(p.GP), 0);
+      const totalGoals = players.reduce((acc,p)=>acc+parseNumber(p.Goals),0);
+      const totalPoints = players.reduce((acc,p)=>acc+parseNumber(p.Points),0);
+      const totalShots = players.reduce((acc,p)=>acc+parseNumber(p.Shots),0);
+      const totalGames = players.reduce((acc,p)=>acc+parseNumber(p.GP),0);
       const roster = players.length;
 
-      const avgGoalsGame = totalGames ? (totalGoals / totalGames).toFixed(2) : "—";
+      const avgGoalsGame = totalGames ? (totalGoals/totalGames).toFixed(2) : "—";
       const shotPct = totalGoals && totalShots
-        ? ((totalGoals / totalShots) * 100).toFixed(1) + "%"
+        ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
         : "—";
       const avgPtsPlayer = totalPoints && roster
-        ? (totalPoints / roster).toFixed(1)
+        ? (totalPoints/roster).toFixed(1)
         : "0";
 
       const cards = [
-        {
-          label: "Total Goals",
-          value: totalGoals,
-          sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players"
-        },
-        {
-          label: "Total Points",
-          value: totalPoints,
-          sub: "Combined leaderboard score"
-        },
-        {
-          label: "Roster Size",
-          value: roster,
-          sub: "Players with stats recorded"
-        },
-        {
-          label: "Shot Accuracy",
-          value: shotPct,
-          sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data"
-        }
+        { label:"Total Goals", value:totalGoals,
+          sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" },
+        { label:"Total Points", value:totalPoints,
+          sub:"Combined leaderboard score" },
+        { label:"Roster Size", value:roster,
+          sub:"Players with stats recorded" },
+        { label:"Shot Accuracy", value:shotPct,
+          sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" }
       ];
 
       let html = "";
-      cards.forEach(card => {
+      cards.forEach(c=>{
         html += `
           <article class="summary-card">
             <div class="summary-glow"></div>
-            <div class="summary-label">${card.label}</div>
-            <div class="summary-value">${card.value}</div>
-            <div class="summary-sub">${card.sub}</div>
+            <div class="summary-label">${c.label}</div>
+            <div class="summary-value">${c.value}</div>
+            <div class="summary-sub">${c.sub}</div>
           </article>
         `;
       });
@@ -789,7 +667,7 @@
     }
 
     function updateStatusUI() {
-      statusChip.innerHTML = "Live data loaded";
+      statusChip.textContent = "Live data loaded";
       const now = new Date();
       footerStatus.textContent =
         "Last updated: " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
