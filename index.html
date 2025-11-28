@@ -1,786 +1,321 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mysters Rocket League – Live Stats</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8" />
+<title>Mysters Rocket League – Live Stats</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- PapaParse for CSV parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!-- CSV Parser -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <style>
-    :root {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #020617;
-      color: #e5e7eb;
-    }
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 1.5rem 1rem 2rem;
-      background:
-        radial-gradient(circle at top, rgba(59, 130, 246, 0.18), transparent 60%),
-        radial-gradient(circle at bottom, rgba(16, 185, 129, 0.12), transparent 55%),
-        #020617;
-    }
-    .app {
-      width: 100%;
-      max-width: 1200px;
-      background: rgba(15, 23, 42, 0.95);
-      border-radius: 1.5rem;
-      padding: 1.5rem 1.25rem 2rem;
-      box-shadow:
-        0 25px 60px rgba(0, 0, 0, 0.75),
-        0 0 0 1px rgba(148, 163, 184, 0.4);
-      backdrop-filter: blur(18px);
-    }
-    @media (min-width: 768px) {
-      .app {
-        padding: 2rem 2.25rem 2.5rem;
-      }
-    }
+<style>
+/* ------ GENERAL LAYOUT ------ */
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #020617;
+  color: #e5e7eb;
+}
 
-    /* HEADER */
-    .header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .title-block {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-    .title {
-      font-size: clamp(1.6rem, 2.2vw + 1rem, 2.4rem);
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-    .title-accent {
-      padding: 0.1rem 0.55rem;
-      border-radius: 999px;
-      border: 1px solid rgba(59, 130, 246, 0.7);
-      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.7), rgba(37, 99, 235, 0.1));
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.16em;
-      color: #bfdbfe;
-    }
-    .subtitle {
-      font-size: 0.9rem;
-      color: #9ca3af;
-    }
-    .season-tag {
-      font-size: 0.78rem;
-      color: #6b7280;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-    .status-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
-      display: inline-block;
-      margin-right: 0.35rem;
-    }
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 60%),
+    radial-gradient(circle at bottom, rgba(16,185,129,0.12), transparent 55%),
+    #020617;
+}
 
-    .badges-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      margin-bottom: 1.2rem;
-    }
-    .pill {
-      padding: 0.18rem 0.6rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      font-size: 0.7rem;
-      color: #9ca3af;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    .dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 999px;
-      background: #22c55e;
-    }
+.app {
+  width: 100%;
+  max-width: 1200px;
+  background: rgba(15,23,42,0.9);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.65);
+  backdrop-filter: blur(18px);
+}
 
-    /* SUMMARY CARDS */
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-    @media (min-width: 768px) {
-      .summary-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
-    .summary-card {
-      background: radial-gradient(circle at top, rgba(15, 118, 110, 0.5), rgba(15, 23, 42, 0.9));
-      border-radius: 0.9rem;
-      padding: 0.7rem 0.8rem;
-      border: 1px solid rgba(45, 212, 191, 0.35);
-      box-shadow: 0 10px 30px rgba(8, 47, 73, 0.5);
-    }
-    .summary-card.alt {
-      background: radial-gradient(circle at top, rgba(37, 99, 235, 0.5), rgba(15, 23, 42, 0.95));
-      border-color: rgba(59, 130, 246, 0.55);
-      box-shadow: 0 10px 30px rgba(30, 64, 175, 0.6);
-    }
-    .summary-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      color: #bfdbfe;
-      margin-bottom: 0.18rem;
-      opacity: 0.85;
-    }
-    .summary-value {
-      font-size: 1.2rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-    .summary-sub {
-      font-size: 0.7rem;
-      color: #e5e7eb;
-      opacity: 0.8;
-      margin-top: 0.15rem;
-    }
+/* ------ SEARCH ------ */
+.search-input {
+  width: 250px;
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #fff;
+  margin-bottom: 14px;
+}
 
-    /* TABLE */
-    .table-card {
-      border-radius: 1rem;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.95);
-      overflow: hidden;
-    }
-    .table-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 0.9rem 0.4rem;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.9);
-      background: linear-gradient(to right, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.98));
-    }
-    .table-title {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-    .table-subtitle {
-      font-size: 0.75rem;
-      color: #9ca3af;
-    }
-    .controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-      align-items: center;
-    }
-    .search-input {
-      background: #020617;
-      border-radius: 999px;
-      border: 1px solid rgba(75, 85, 99, 0.9);
-      padding: 0.3rem 0.7rem;
-      font-size: 0.75rem;
-      color: #e5e7eb;
-      min-width: 140px;
-    }
-    .search-input::placeholder {
-      color: #6b7280;
-    }
+.search-input::placeholder {
+  color: #64748b;
+}
 
-    .table-scroll {
-      max-height: 60vh;
-      overflow: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-    th, td {
-      padding: 0.55rem 0.7rem;
-      font-size: 0.8rem;
-      white-space: nowrap;
-      text-align: right;
-      border-bottom: 1px solid rgba(31, 41, 55, 0.95);
-    }
-    thead {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: linear-gradient(to right, #020617, #020617 25%, #020617);
-    }
-    th:first-child, td:first-child {
-      text-align: left;
-      position: sticky;
-      left: 0;
-      background: inherit;
-      z-index: 2;
-    }
-    th:nth-child(2), td:nth-child(2) {
-      text-align: left;
-    }
-    th {
-      font-weight: 600;
-      color: #9ca3af;
-      cursor: pointer;
-      user-select: none;
-    }
-    th .label {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-    .sort-indicator {
-      font-size: 0.6rem;
-      opacity: 0.25;
-    }
-    th.sorted-asc .sort-indicator,
-    th.sorted-desc .sort-indicator {
-      opacity: 1;
-      color: #38bdf8;
-    }
+/* ------ TABLE ------ */
+.table-card {
+  background: #111827;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
 
-    tbody tr:nth-child(even) {
-      background: rgba(15, 23, 42, 0.9);
-    }
-    tbody tr:nth-child(odd) {
-      background: rgba(15, 23, 42, 0.85);
-    }
-    tbody tr:hover {
-      background: rgba(37, 99, 235, 0.35);
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-    .player-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 0.1rem;
-      line-height: 1.2;
-    }
-    .player-main {
-      font-size: 0.82rem;
-      font-weight: 600;
-    }
-    .player-sub {
-      font-size: 0.72rem;
-      color: #9ca3af;
-    }
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #1e293b;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
 
-    /* TOP PLAYER HIGHLIGHT */
-    .top-player-row {
-      border-left: 3px solid #facc15;
-      box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.2);
-      background: radial-gradient(circle at left, rgba(250, 204, 21, 0.12), rgba(15, 23, 42, 0.95));
-    }
-    .top-player-badge {
-      font-size: 0.65rem;
-      color: #facc15;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-    }
+thead th {
+  background: #0f172a;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  cursor: pointer;
+  color: #cbd5e1;
+  user-select: none;
+}
 
-    tfoot td {
-      font-weight: 600;
-      background: radial-gradient(circle at top, #020617, #020617 70%);
-      border-top: 1px solid rgba(148, 163, 184, 0.6);
-      position: sticky;
-      bottom: 0;
-      z-index: 1;
-    }
+/* Player name / epic layout */
+.player-cell {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
 
-    .loading {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.78rem;
-      color: #9ca3af;
-      margin-top: 0.6rem;
-    }
-    .spinner {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      border: 2px solid rgba(148, 163, 184, 0.6);
-      border-top-color: #60a5fa;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+.player-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+/* ------ TOP PLAYER ------ */
+.top-player-row {
+  background: rgba(234,179,8,0.15) !important;
+  border-left: 3px solid #facc15;
+}
+
+.top-player-badge {
+  font-size: 0.7rem;
+  margin-top: 3px;
+  color: #facc15;
+  text-transform: uppercase;
+}
+
+/* ------ FOOTER ------ */
+tfoot td {
+  background: #0f172a;
+  font-weight: bold;
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <header class="header">
-      <div class="title-block">
-        <div class="title">
-          Mysters Rocket League
-          <span class="title-accent">Live Stats</span>
-        </div>
-        <p class="subtitle">
-          Esports-style leaderboard, powered directly by your Google Sheet.
-        </p>
-      </div>
-      <div class="season-tag">
-        <span class="status-dot"></span> LIVE SYNC
-      </div>
-    </header>
+<div class="app">
 
-    <div class="badges-row">
-      <div class="pill"><span class="dot"></span>Live Google Sheets data</div>
-      <div class="pill">↕ Click a header to sort</div>
-      <div class="pill">🔍 Search by Discord / Epic</div>
-    </div>
+  <h1 style="margin-top:0;margin-bottom:0.3rem;font-size:2rem;font-weight:700;">
+    Mysters Rocket League
+    <span style="color:#60a5fa;font-size:0.9rem;">LIVE</span>
+  </h1>
 
-    <section class="summary-grid" id="summaryGrid"></section>
+  <p style="margin:0 0 1.2rem;color:#94a3b8;font-size:0.9rem;">
+    Esports-style leaderboard synced directly from Google Sheets.
+  </p>
 
-    <section class="table-card">
-      <div class="table-header-row">
-        <div>
-          <div class="table-title">Player Leaderboard</div>
-          <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
-        </div>
-        <div class="controls">
-          <input id="searchInput" class="search-input" placeholder="Search…" />
-        </div>
-      </div>
+  <input id="searchInput" class="search-input" placeholder="Search players…">
 
-      <div class="table-scroll">
-        <table id="statsTable">
-          <thead id="tableHead"></thead>
-          <tbody id="tableBody"></tbody>
-          <tfoot id="tableFoot"></tfoot>
-        </table>
-      </div>
-    </section>
-
-    <div id="statusBox" class="loading">
-      <span class="spinner"></span>
-      <span>Fetching live data from Google Sheets…</span>
-    </div>
+  <div class="table-card">
+    <table>
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+      <tfoot id="tableFoot"></tfoot>
+    </table>
   </div>
 
-  <script>
-    // Live CSV export from your published sheet/tab
-    const SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
+</div>
 
-    // Column configuration for esports-style layout
-    const COLUMN_CONFIG = [
-      { id: "discord", label: "Discord", possibleHeaders: ["Discord"], role: "playerMain" },
-      { id: "epic", label: "Epic", possibleHeaders: ["Epic"], role: "playerSub" },
-      { id: "gp", label: "GP", possibleHeaders: ["GP", "Games", "Games Played"] },
-      { id: "points", label: "Points", possibleHeaders: ["Points"] },
-      { id: "goals", label: "Goals", possibleHeaders: ["Goals"] },
-      { id: "assists", label: "Assists", possibleHeaders: ["Assists"] },
-      { id: "saves", label: "Saves", possibleHeaders: ["Saves"] },
-      { id: "shots", label: "Shots", possibleHeaders: ["Shots"] },
-      { id: "gw", label: "GW", possibleHeaders: ["GW"] },
-      { id: "gl", label: "GL", possibleHeaders: ["GL"] },
-      { id: "mvps", label: "MVPs", possibleHeaders: ["MVPs", "MVP"] },
-      { id: "ppg", label: "Av. PPG", possibleHeaders: ["Av. PPG", "PPG"] },
-      { id: "gaRatio", label: "GA Ratio", possibleHeaders: ["GA Ratio"] },
-      { id: "gsRatio", label: "GS Ratio", possibleHeaders: ["GS Ratio"] },
-      { id: "gsPct", label: "GS %", possibleHeaders: ["GS %", "GS%"] }
-    ];
+<script>
+/* YOUR PUBLISHED CSV LINK */
+const SHEET_CSV_URL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-    let allRows = [];
-    let players = [];
-    let filteredPlayers = [];
-    let sortState = { id: null, dir: "desc" };
-    let topPlayerDiscord = null;
+/* Forced column order (matches your sheet EXACTLY) */
+const COLS = [
+  "Discord","Epic","GP","Points","Goals","Assists","Saves",
+  "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
+];
 
-    const tableHead = document.getElementById("tableHead");
-    const tableBody = document.getElementById("tableBody");
-    const tableFoot = document.getElementById("tableFoot");
-    const summaryGrid = document.getElementById("summaryGrid");
-    const searchInput = document.getElementById("searchInput");
-    const statusBox = document.getElementById("statusBox");
-    const playerCountLabel = document.getElementById("playerCountLabel");
+let players = [];
+let filtered = [];
+let sortCol = 3;  // Points by default
+let sortDir = "desc";
 
-    function setStatus(msg) {
-      statusBox.innerHTML =
-        '<span class="spinner"></span><span>' + msg + "</span>";
-    }
+/* ---------- HELPERS ---------- */
+function parseNum(v){
+  if (!v || /DIV|REF|VALUE/i.test(v)) return 0;
+  const m = String(v).match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : 0;
+}
 
-    function cleanNumericString(val) {
-      if (val === null || val === undefined) return "";
-      const s = String(val).trim();
-      if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
-      return s;
-    }
+/* ---------- LOAD SHEET ---------- */
+function load(){
+  Papa.parse(SHEET_CSV_URL,{
+    download:true,
+    header:false,
+    skipEmptyLines:true,
+    complete:(res)=>{
+      let rows = res.data;
 
-    function parseNumber(val) {
-      if (val === null || val === undefined) return 0;
-      const s = String(val);
-      const m = s.match(/-?\d+(\.\d+)?/);
-      if (!m) return 0;
-      const n = parseFloat(m[0]);
-      return isNaN(n) ? 0 : n;
-    }
+      // Remove Google "table" header rows
+      rows = rows.filter(r => r[0] && !String(r[0]).toLowerCase().includes("whole team"));
+      rows = rows.filter(r => r[0] !== "Discord"); // remove duplicate header row too
 
-    function mapColumns(headerKeys) {
-      COLUMN_CONFIG.forEach(cfg => {
-        cfg.sourceKey = null;
-        const targets = cfg.possibleHeaders.map(h => h.toLowerCase().trim());
-        for (const hk of headerKeys) {
-          if (targets.includes(hk.toLowerCase().trim())) {
-            cfg.sourceKey = hk;
-            break;
-          }
-        }
-      });
-    }
+      // Map rows safely to players by FIXED COLUMN ORDER
+      players = rows.map(r => ({
+        Discord: r[0] ?? "",
+        Epic: r[1] ?? "",
+        GP: r[2] ?? "",
+        Points: r[3] ?? "",
+        Goals: r[4] ?? "",
+        Assists: r[5] ?? "",
+        Saves: r[6] ?? "",
+        Shots: r[7] ?? "",
+        GW: r[8] ?? "",
+        GL: r[9] ?? "",
+        MVPs: r[10] ?? "",
+        PPG: r[11] ?? "",
+        GAR: r[12] ?? "",
+        GSR: r[13] ?? "",
+        GSP: r[14] ?? ""
+      }));
 
-    function getCfg(id) {
-      return COLUMN_CONFIG.find(c => c.id === id);
-    }
+      filtered = [...players];
 
-    function getVal(row, id) {
-      const cfg = getCfg(id);
-      if (!cfg || !cfg.sourceKey) return "";
-      return row[cfg.sourceKey];
-    }
-
-    function identifyTopPlayer() {
-      const pointsCfg = getCfg("points");
-      const gpCfg = getCfg("gp");
-      if (!pointsCfg || !pointsCfg.sourceKey) return;
-
-      let bestPoints = -Infinity;
-      let bestDiscord = null;
-
-      players.forEach(row => {
-        const gp = gpCfg && gpCfg.sourceKey ? parseNumber(row[gpCfg.sourceKey]) : 0;
-        const pts = parseNumber(row[pointsCfg.sourceKey]);
-        if (gp > 0 && pts >= bestPoints) {
-          bestPoints = pts;
-          bestDiscord = getVal(row, "discord");
-        }
-      });
-
-      topPlayerDiscord = bestDiscord;
-    }
-
-    function buildTableHead() {
-      tableHead.innerHTML = "";
-      const row = document.createElement("tr");
-
-      COLUMN_CONFIG.forEach(cfg => {
-        if (!cfg.sourceKey) return; // skip columns not in sheet
-
-        const th = document.createElement("th");
-        th.dataset.colId = cfg.id;
-        th.innerHTML =
-          '<span class="label">' +
-          cfg.label +
-          '<span class="sort-indicator">↕</span></span>';
-
-        th.addEventListener("click", () => {
-          if (sortState.id === cfg.id) {
-            sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
-          } else {
-            sortState.id = cfg.id;
-            sortState.dir = "desc";
-          }
-          applySorting();
-          renderBody();
-          updateSortClasses();
-        });
-
-        row.appendChild(th);
-      });
-
-      tableHead.appendChild(row);
-    }
-
-    function updateSortClasses() {
-      tableHead.querySelectorAll("th").forEach(th => {
-        const id = th.dataset.colId;
-        th.classList.remove("sorted-asc", "sorted-desc");
-        if (id === sortState.id) {
-          th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
-        }
-      });
-    }
-
-    function applySorting() {
-      if (!sortState.id) return;
-      const cfg = getCfg(sortState.id);
-      if (!cfg || !cfg.sourceKey) return;
-
-      const numeric = !["discord", "epic"].includes(cfg.id);
-
-      filteredPlayers.sort((a, b) => {
-        const av = a[cfg.sourceKey];
-        const bv = b[cfg.sourceKey];
-
-        if (numeric) {
-          const an = parseNumber(av);
-          const bn = parseNumber(bv);
-          return sortState.dir === "asc" ? an - bn : bn - an;
-        } else {
-          const as = String(av || "").toLowerCase();
-          const bs = String(bv || "").toLowerCase();
-          if (as < bs) return sortState.dir === "asc" ? -1 : 1;
-          if (as > bs) return sortState.dir === "asc" ? 1 : -1;
-          return 0;
-        }
-      });
-    }
-
-    function renderBody() {
-      tableBody.innerHTML = "";
-
-      filteredPlayers.forEach(row => {
-        const tr = document.createElement("tr");
-
-        const isTop = topPlayerDiscord &&
-                      String(getVal(row, "discord")).trim() === String(topPlayerDiscord).trim();
-        if (isTop) {
-          tr.classList.add("top-player-row");
-        }
-
-        COLUMN_CONFIG.forEach((cfg, index) => {
-          if (!cfg.sourceKey) return;
-          const td = document.createElement("td");
-          const raw = getVal(row, cfg.id);
-
-          if (index === 0) {
-            // first column: Discord + Epic + badge
-            const epic = getVal(row, "epic");
-            td.innerHTML = `
-              <div class="player-cell">
-                <span class="player-main">${raw || ""}</span>
-                <span class="player-sub">${epic || ""}</span>
-                ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
-              </div>
-            `;
-          } else if (["gaRatio", "gsRatio", "gsPct", "ppg"].includes(cfg.id)) {
-            td.textContent = cleanNumericString(raw);
-          } else {
-            td.textContent = cleanNumericString(raw === undefined ? "" : raw);
-          }
-
-          tr.appendChild(td);
-        });
-
-        tableBody.appendChild(tr);
-      });
-
-      playerCountLabel.textContent = `${filteredPlayers.length} player${
-        filteredPlayers.length === 1 ? "" : "s"
-      }`;
-    }
-
-    function renderFootTotals() {
-      tableFoot.innerHTML = "";
-      const tr = document.createElement("tr");
-
-      COLUMN_CONFIG.forEach((cfg, index) => {
-        if (!cfg.sourceKey) return;
-        const td = document.createElement("td");
-
-        if (index === 0) {
-          td.textContent = "Totals";
-        } else {
-          // sum numeric-looking columns only
-          const numeric = !["discord", "epic"].includes(cfg.id);
-          if (!numeric) {
-            td.textContent = "";
-          } else {
-            const sum = players.reduce((acc, row) => acc + parseNumber(row[cfg.sourceKey]), 0);
-            const rounded =
-              Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
-            td.textContent = sum ? String(rounded).replace(/\.0$/, "") : "";
-          }
-        }
-
-        tr.appendChild(td);
-      });
-
-      tableFoot.appendChild(tr);
-    }
-
-    function buildSummaryCards() {
-      summaryGrid.innerHTML = "";
-
-      const goalsCfg = getCfg("goals");
-      const pointsCfg = getCfg("points");
-      const shotsCfg = getCfg("shots");
-      const gpCfg = getCfg("gp");
-
-      const totalGoals = goalsCfg && goalsCfg.sourceKey
-        ? players.reduce((acc, r) => acc + parseNumber(r[goalsCfg.sourceKey]), 0)
-        : 0;
-
-      const totalPoints = pointsCfg && pointsCfg.sourceKey
-        ? players.reduce((acc, r) => acc + parseNumber(r[pointsCfg.sourceKey]), 0)
-        : 0;
-
-      const totalShots = shotsCfg && shotsCfg.sourceKey
-        ? players.reduce((acc, r) => acc + parseNumber(r[shotsCfg.sourceKey]), 0)
-        : 0;
-
-      const totalGames = gpCfg && gpCfg.sourceKey
-        ? players.reduce((acc, r) => acc + parseNumber(r[gpCfg.sourceKey]), 0)
-        : 0;
-
-      const avgGoalsPerGame = totalGames ? (totalGoals / totalGames).toFixed(2) : "—";
-      const shotPct =
-        totalGoals && totalShots ? ((totalGoals / totalShots) * 100).toFixed(1) + "%" : "—";
-      const avgPoints =
-        totalPoints && players.length ? (totalPoints / players.length).toFixed(1) : "0";
-
-      const cards = [
-        {
-          label: "Total Goals",
-          value: totalGoals,
-          sub: totalGames ? avgGoalsPerGame + " goals per game" : "Across all players"
-        },
-        {
-          label: "Total Points",
-          value: totalPoints,
-          sub: "Leaderboard combined score"
-        },
-        {
-          label: "Roster Size",
-          value: players.length,
-          sub: "Players on this tab"
-        },
-        {
-          label: "Average Points",
-          value: avgPoints,
-          sub: "Per player"
-        }
-      ];
-
-      cards.forEach((c, i) => {
-        const div = document.createElement("div");
-        div.className = i % 2 === 0 ? "summary-card" : "summary-card alt";
-        div.innerHTML =
-          '<div class="summary-label">' +
-          c.label +
-          '</div><div class="summary-value">' +
-          c.value +
-          '</div><div class="summary-sub">' +
-          c.sub +
-          "</div>";
-        summaryGrid.appendChild(div);
-      });
-    }
-
-    function applySearchFilter() {
-      const term = (searchInput.value || "").toLowerCase().trim();
-      if (!term) {
-        filteredPlayers = [...players];
-      } else {
-        filteredPlayers = players.filter(row => {
-          const d = String(getVal(row, "discord") || "").toLowerCase();
-          const e = String(getVal(row, "epic") || "").toLowerCase();
-          return d.includes(term) || e.includes(term);
-        });
-      }
-      applySorting();
+      renderHead();
+      sortRows();
       renderBody();
-      updateSortClasses();
+      renderFoot();
     }
+  });
+}
 
-    searchInput.addEventListener("input", applySearchFilter);
+/* ---------- HEADER RENDER ---------- */
+function renderHead(){
+  let html = "<tr>";
+  COLS.forEach((c,i)=>{
+    html += `<th data-col="${i}">${c}</th>`;
+  });
+  html += "</tr>";
+  document.getElementById("tableHead").innerHTML = html;
 
-    function loadSheet() {
-      setStatus("Fetching live data from Google Sheets…");
+  // sorting
+  document.querySelectorAll("th").forEach(th=>{
+    th.onclick = ()=>{
+      let col = Number(th.dataset.col);
+      if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+      else { sortCol = col; sortDir="desc"; }
 
-      Papa.parse(SHEET_CSV_URL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: results => {
-          const rows = results.data || [];
+      sortRows();
+      renderBody();
+    };
+  });
+}
 
-          // remove totally empty rows
-          allRows = rows.filter(r =>
-            Object.values(r).some(v => String(v || "").trim() !== "")
-          );
+/* ---------- SORTING ---------- */
+function sortRows(){
+  filtered.sort((a,b)=>{
+    let av = Object.values(a)[sortCol];
+    let bv = Object.values(b)[sortCol];
+    av = parseNum(av);
+    bv = parseNum(bv);
+    return sortDir === "asc" ? av - bv : bv - av;
+  });
+}
 
-          if (!allRows.length) {
-            setStatus("Sheet loaded, but no data rows found.");
-            return;
-          }
+/* ---------- RENDER BODY ---------- */
+function renderBody(){
+  const topDiscord = filtered.length ? filtered[0].Discord : null;
 
-          const headerKeys = results.meta && results.meta.fields
-            ? results.meta.fields
-            : Object.keys(allRows[0]);
+  let html = "";
+  filtered.forEach(p=>{
+    const isTop = p.Discord === topDiscord;
 
-          mapColumns(headerKeys);
+    html += `<tr class="${isTop ? "top-player-row" : ""}">`;
 
-          const discordCfg = getCfg("discord");
-          const epicCfg = getCfg("epic");
+    // first column = special layout
+    html += `
+      <td>
+        <div class="player-cell">
+          <span>${p.Discord}</span>
+          <span class="player-sub">${p.Epic}</span>
+          ${isTop ? `<span class="top-player-badge">★ Top Player</span>` : ""}
+        </div>
+      </td>
+    `;
 
-          // Filter out totals row + duplicate header row
-          players = allRows.filter(row => {
-            const d = discordCfg && discordCfg.sourceKey
-              ? String(row[discordCfg.sourceKey] || "").trim()
-              : "";
-            const e = epicCfg && epicCfg.sourceKey
-              ? String(row[epicCfg.sourceKey] || "").trim()
-              : "";
+    // remaining stats
+    html += `<td>${p.Epic}</td>`;
+    html += `<td>${p.GP}</td>`;
+    html += `<td>${p.Points}</td>`;
+    html += `<td>${p.Goals}</td>`;
+    html += `<td>${p.Assists}</td>`;
+    html += `<td>${p.Saves}</td>`;
+    html += `<td>${p.Shots}</td>`;
+    html += `<td>${p.GW}</td>`;
+    html += `<td>${p.GL}</td>`;
+    html += `<td>${p.MVPs}</td>`;
+    html += `<td>${p.PPG}</td>`;
+    html += `<td>${p.GAR}</td>`;
+    html += `<td>${p.GSR}</td>`;
+    html += `<td>${p.GSP}</td>`;
 
-            const lowerD = d.toLowerCase();
+    html += "</tr>";
+  });
 
-            if (!d && !e) return false;                 // empty line
-            if (lowerD.includes("whole team")) return false; // sheet totals row
-            if (d === "Discord" || e === "Epic") return false; // repeat header row
-            return true;
-          });
+  document.getElementById("tableBody").innerHTML = html;
+}
 
-          if (!players.length) {
-            setStatus("No player rows found.");
-            return;
-          }
+/* ---------- FOOT TOTALS ---------- */
+function renderFoot(){
+  let totals = new Array(COLS.length).fill(0);
 
-          identifyTopPlayer();
-          buildTableHead();
-          buildSummaryCards();
+  players.forEach(p=>{
+    Object.values(p).forEach((v,i)=>{
+      totals[i] += parseNum(v);
+    });
+  });
 
-          filteredPlayers = [...players];
-          sortState.id = "points";  // default sort by points
-          sortState.dir = "desc";
-          applySorting();
-          renderBody();
-          renderFootTotals();
-          updateSortClasses();
+  let html="<tr>";
+  COLS.forEach((c,i)=>{
+    if (i===0) html += "<td>Totals</td>";
+    else html += `<td>${totals[i] || ""}</td>`;
+  });
+  html+="</tr>";
 
-          setStatus("Live data loaded.");
-        },
-        error: err => {
-          console.error(err);
-          setStatus("Failed to load data from Google Sheets.");
-        }
-      });
-    }
+  document.getElementById("tableFoot").innerHTML = html;
+}
 
-    loadSheet();
-  </script>
+/* ---------- SEARCH ---------- */
+document.getElementById("searchInput").addEventListener("input",e=>{
+  let q = e.target.value.toLowerCase();
+  filtered = players.filter(p =>
+    p.Discord.toLowerCase().includes(q) ||
+    p.Epic.toLowerCase().includes(q)
+  );
+  sortRows();
+  renderBody();
+});
+
+/* ---------- INIT ---------- */
+load();
+</script>
 </body>
 </html>
