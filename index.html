@@ -1,321 +1,818 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Mysters Rocket League – Live Stats</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Mysters Rocket League – Esports Live Stats</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- CSV Parser -->
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-<style>
-/* ------ GENERAL LAYOUT ------ */
-:root {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #020617;
-  color: #e5e7eb;
-}
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 1.5rem 1rem 2.5rem;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top, rgba(59,130,246,0.25), transparent 60%),
+        radial-gradient(circle at bottom, rgba(16,185,129,0.18), transparent 55%),
+        #020617;
+    }
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      background: rgba(15,23,42,0.9);
+      border-radius: 1.8rem;
+      padding: 1.8rem 1.4rem 2.2rem;
+      box-shadow:
+        0 30px 80px rgba(0,0,0,0.8),
+        0 0 0 1px rgba(148,163,184,0.35);
+      backdrop-filter: blur(22px);
+      position: relative;
+      overflow: hidden;
+    }
 
-body {
-  margin: 0;
-  padding: 2rem 1rem;
-  display: flex;
-  justify-content: center;
-  background:
-    radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 60%),
-    radial-gradient(circle at bottom, rgba(16,185,129,0.12), transparent 55%),
-    #020617;
-}
+    /* Floating glow panels */
+    .glow {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(55px);
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .glow.blue {
+      width: 280px;
+      height: 280px;
+      top: -80px;
+      right: -60px;
+      background: rgba(59,130,246,0.7);
+    }
+    .glow.teal {
+      width: 300px;
+      height: 300px;
+      bottom: -120px;
+      left: -80px;
+      background: rgba(45,212,191,0.7);
+    }
 
-.app {
-  width: 100%;
-  max-width: 1200px;
-  background: rgba(15,23,42,0.9);
-  padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.65);
-  backdrop-filter: blur(18px);
-}
+    /* Header */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.4rem;
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .title-line {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+    .app-title {
+      font-size: clamp(1.8rem, 2.6vw + 1rem, 2.6rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .live-badge {
+      padding: 0.15rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(248,113,113,0.8);
+      background: radial-gradient(circle at top left, rgba(220,38,38,0.85), rgba(127,29,29,0.9));
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #fee2e2;
+      box-shadow: 0 0 20px rgba(239,68,68,0.7);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #fee2e2;
+      box-shadow: 0 0 12px rgba(254,202,202,0.9);
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #cbd5f5;
+      opacity: 0.9;
+    }
+    .season-tag {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 12px rgba(34,197,94,0.9);
+    }
 
-/* ------ SEARCH ------ */
-.search-input {
-  width: 250px;
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid #475569;
-  background: #0f172a;
-  color: #fff;
-  margin-bottom: 14px;
-}
+    /* Badges row */
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .pill {
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: rgba(15,23,42,0.95);
+      font-size: 0.7rem;
+      color: #cbd5f5;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      backdrop-filter: blur(10px);
+    }
+    .pill-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 999px;
+      background: #60a5fa;
+    }
 
-.search-input::placeholder {
-  color: #64748b;
-}
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.6rem;
+    }
+    @media (min-width: 768px) {
+      .summary-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+    .summary-card {
+      position: relative;
+      border-radius: 1rem;
+      padding: 0.8rem 0.9rem;
+      border: 1px solid rgba(148,163,184,0.45);
+      background: radial-gradient(circle at top left, rgba(37,99,235,0.4), rgba(15,23,42,0.95));
+      box-shadow: 0 18px 35px rgba(15,23,42,0.9);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+      transform: translateY(0);
+      animation: floatCard 7s ease-in-out infinite;
+    }
+    .summary-card:nth-child(2) { animation-delay: 0.6s; }
+    .summary-card:nth-child(3) { animation-delay: 1.2s; }
+    .summary-card:nth-child(4) { animation-delay: 1.8s; }
 
-/* ------ TABLE ------ */
-.table-card {
-  background: #111827;
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid #334155;
-}
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+    .summary-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #bfdbfe;
+      margin-bottom: 0.2rem;
+    }
+    .summary-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .summary-sub {
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      opacity: 0.85;
+      margin-top: 0.1rem;
+    }
+    .summary-glow {
+      position: absolute;
+      right: -20px;
+      top: -20px;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, rgba(56,189,248,0.8), transparent 55%);
+      opacity: 0.45;
+      pointer-events: none;
+    }
 
-th, td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #1e293b;
-  white-space: nowrap;
-  font-size: 0.85rem;
-}
+    /* Table section */
+    .table-card {
+      border-radius: 1.2rem;
+      border: 1px solid rgba(148,163,184,0.5);
+      background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(12,18,34,0.98));
+      overflow: hidden;
+      box-shadow: 0 25px 45px rgba(15,23,42,1);
+    }
+    .table-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0.9rem 0.5rem;
+      border-bottom: 1px solid rgba(30,64,175,0.7);
+      background: radial-gradient(circle at top left, rgba(37,99,235,0.5), rgba(15,23,42,0.95));
+    }
+    .table-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .table-subtitle {
+      font-size: 0.75rem;
+      color: #cbd5f5;
+      opacity: 0.85;
+    }
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      background: rgba(15,23,42,0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.8);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      color: #e5e7eb;
+      min-width: 160px;
+      outline: none;
+      box-shadow: 0 0 0 1px transparent;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .search-input::placeholder {
+      color: #9ca3af;
+    }
+    .search-input:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
+      background: rgba(15,23,42,1);
+    }
 
-thead th {
-  background: #0f172a;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  cursor: pointer;
-  color: #cbd5e1;
-  user-select: none;
-}
+    .status-chip {
+      font-size: 0.7rem;
+      color: #cbd5f5;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .tiny-spinner {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 2px solid rgba(148,163,184,0.6);
+      border-top-color: #60a5fa;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-/* Player name / epic layout */
-.player-cell {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
+    .table-scroll {
+      max-height: 60vh;
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 960px;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: linear-gradient(to right, #020617, #020617 25%, #020617);
+    }
+    th, td {
+      padding: 0.55rem 0.7rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      text-align: right;
+      border-bottom: 1px solid rgba(30,64,175,0.4);
+    }
+    th:first-child, td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: inherit;
+      z-index: 4;
+    }
+    th:nth-child(2), td:nth-child(2) {
+      text-align: left;
+    }
+    th {
+      font-weight: 600;
+      color: #9ca3af;
+      cursor: pointer;
+      user-select: none;
+    }
+    th .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .sort-icon {
+      font-size: 0.7rem;
+      opacity: 0.25;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    th.sorted-asc .sort-icon,
+    th.sorted-desc .sort-icon {
+      opacity: 1;
+      color: #38bdf8;
+    }
+    th.sorted-asc .sort-icon {
+      transform: rotate(180deg);
+    }
 
-.player-sub {
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
+    tbody tr:nth-child(even) {
+      background: rgba(15,23,42,0.95);
+    }
+    tbody tr:nth-child(odd) {
+      background: rgba(15,23,42,0.9);
+    }
+    tbody tr:hover {
+      background: rgba(37,99,235,0.35);
+    }
 
-/* ------ TOP PLAYER ------ */
-.top-player-row {
-  background: rgba(234,179,8,0.15) !important;
-  border-left: 3px solid #facc15;
-}
+    .player-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.08rem;
+      line-height: 1.2;
+    }
+    .player-main {
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .player-sub {
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
 
-.top-player-badge {
-  font-size: 0.7rem;
-  margin-top: 3px;
-  color: #facc15;
-  text-transform: uppercase;
-}
+    .top-player-row {
+      border-left: 3px solid #facc15;
+      box-shadow: inset 0 0 0 1px rgba(250,204,21,0.25);
+      background: radial-gradient(circle at left, rgba(250,204,21,0.16), rgba(15,23,42,0.96));
+    }
+    .top-player-badge {
+      font-size: 0.65rem;
+      color: #facc15;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-top: 0.05rem;
+    }
 
-/* ------ FOOTER ------ */
-tfoot td {
-  background: #0f172a;
-  font-weight: bold;
-  position: sticky;
-  bottom: 0;
-  z-index: 4;
-}
-</style>
+    tfoot td {
+      font-weight: 600;
+      background: radial-gradient(circle at top, #020617, #020617 70%);
+      border-top: 1px solid rgba(148,163,184,0.7);
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+    }
+
+    .footer-note {
+      margin-top: 0.8rem;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  </style>
 </head>
-
 <body>
-<div class="app">
+  <div class="app">
+    <div class="glow blue"></div>
+    <div class="glow teal"></div>
 
-  <h1 style="margin-top:0;margin-bottom:0.3rem;font-size:2rem;font-weight:700;">
-    Mysters Rocket League
-    <span style="color:#60a5fa;font-size:0.9rem;">LIVE</span>
-  </h1>
+    <header class="header">
+      <div class="title-block">
+        <div class="title-line">
+          <h1 class="app-title">Mysters Rocket League</h1>
+          <span class="live-badge">
+            <span class="live-dot"></span>
+            LIVE
+          </span>
+        </div>
+        <p class="subtitle">
+          Esports-style leaderboard with live stats from your Google Sheet.
+        </p>
+      </div>
+      <div class="season-tag">
+        <span class="status-dot"></span>
+        SEASON STATS • AUTO SYNC
+      </div>
+    </header>
 
-  <p style="margin:0 0 1.2rem;color:#94a3b8;font-size:0.9rem;">
-    Esports-style leaderboard synced directly from Google Sheets.
-  </p>
+    <div class="badges-row">
+      <span class="pill"><span class="pill-dot"></span> Powered by Google Sheets</span>
+      <span class="pill">↕ Click headers to sort</span>
+      <span class="pill">🔍 Search by Discord or Epic</span>
+      <span class="pill">★ Top player highlighted</span>
+    </div>
 
-  <input id="searchInput" class="search-input" placeholder="Search players…">
+    <section class="summary-grid" id="summaryGrid">
+      <!-- summary cards injected here -->
+    </section>
 
-  <div class="table-card">
-    <table>
-      <thead id="tableHead"></thead>
-      <tbody id="tableBody"></tbody>
-      <tfoot id="tableFoot"></tfoot>
-    </table>
+    <section class="table-card">
+      <div class="table-header-row">
+        <div>
+          <div class="table-title">Player Leaderboard</div>
+          <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
+        </div>
+        <div class="controls">
+          <input
+            type="text"
+            class="search-input"
+            id="searchInput"
+            placeholder="Search players…"
+          />
+          <span class="status-chip" id="statusChip">
+            <span class="tiny-spinner"></span>
+            Fetching live data…
+          </span>
+        </div>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+          <tfoot id="tableFoot"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      <span>Data source: Mysters Rocket League Google Sheet (live CSV export).</span>
+      <span id="footerStatus">Last updated: just now</span>
+    </div>
   </div>
 
-</div>
+  <script>
+    // Live CSV export of your published sheet/tab
+    const SHEET_CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-<script>
-/* YOUR PUBLISHED CSV LINK */
-const SHEET_CSV_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
+    // Exact ordered columns from your sheet
+    const COLS = [
+      "Discord", "Epic", "GP", "Points", "Goals", "Assists", "Saves",
+      "Shots", "GW", "GL", "MVPs", "Av. PPG", "GA Ratio", "GS Ratio", "GS %"
+    ];
 
-/* Forced column order (matches your sheet EXACTLY) */
-const COLS = [
-  "Discord","Epic","GP","Points","Goals","Assists","Saves",
-  "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
-];
+    let players = [];
+    let filteredPlayers = [];
+    let sortState = { index: 3, dir: "desc" }; // default sort by Points
+    let topPlayerDiscord = null;
 
-let players = [];
-let filtered = [];
-let sortCol = 3;  // Points by default
-let sortDir = "desc";
+    const tableHead = document.getElementById("tableHead");
+    const tableBody = document.getElementById("tableBody");
+    const tableFoot = document.getElementById("tableFoot");
+    const summaryGrid = document.getElementById("summaryGrid");
+    const searchInput = document.getElementById("searchInput");
+    const playerCountLabel = document.getElementById("playerCountLabel");
+    const statusChip = document.getElementById("statusChip");
+    const footerStatus = document.getElementById("footerStatus");
 
-/* ---------- HELPERS ---------- */
-function parseNum(v){
-  if (!v || /DIV|REF|VALUE/i.test(v)) return 0;
-  const m = String(v).match(/-?\d+(\.\d+)?/);
-  return m ? parseFloat(m[0]) : 0;
-}
-
-/* ---------- LOAD SHEET ---------- */
-function load(){
-  Papa.parse(SHEET_CSV_URL,{
-    download:true,
-    header:false,
-    skipEmptyLines:true,
-    complete:(res)=>{
-      let rows = res.data;
-
-      // Remove Google "table" header rows
-      rows = rows.filter(r => r[0] && !String(r[0]).toLowerCase().includes("whole team"));
-      rows = rows.filter(r => r[0] !== "Discord"); // remove duplicate header row too
-
-      // Map rows safely to players by FIXED COLUMN ORDER
-      players = rows.map(r => ({
-        Discord: r[0] ?? "",
-        Epic: r[1] ?? "",
-        GP: r[2] ?? "",
-        Points: r[3] ?? "",
-        Goals: r[4] ?? "",
-        Assists: r[5] ?? "",
-        Saves: r[6] ?? "",
-        Shots: r[7] ?? "",
-        GW: r[8] ?? "",
-        GL: r[9] ?? "",
-        MVPs: r[10] ?? "",
-        PPG: r[11] ?? "",
-        GAR: r[12] ?? "",
-        GSR: r[13] ?? "",
-        GSP: r[14] ?? ""
-      }));
-
-      filtered = [...players];
-
-      renderHead();
-      sortRows();
-      renderBody();
-      renderFoot();
+    function parseNumber(val) {
+      if (val === undefined || val === null) return 0;
+      const s = String(val);
+      if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
+      const match = s.match(/-?\\d+(\\.\\d+)?/);
+      if (!match) return 0;
+      const n = parseFloat(match[0]);
+      return isNaN(n) ? 0 : n;
     }
-  });
-}
 
-/* ---------- HEADER RENDER ---------- */
-function renderHead(){
-  let html = "<tr>";
-  COLS.forEach((c,i)=>{
-    html += `<th data-col="${i}">${c}</th>`;
-  });
-  html += "</tr>";
-  document.getElementById("tableHead").innerHTML = html;
+    function cleanValue(val) {
+      if (val === undefined || val === null) return "";
+      const s = String(val).trim();
+      if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
+      return s;
+    }
 
-  // sorting
-  document.querySelectorAll("th").forEach(th=>{
-    th.onclick = ()=>{
-      let col = Number(th.dataset.col);
-      if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
-      else { sortCol = col; sortDir="desc"; }
+    function loadSheet() {
+      Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: false,
+        skipEmptyLines: true,
+        complete: (results) => {
+          let rows = results.data || [];
 
-      sortRows();
+          // Filter empty rows
+          rows = rows.filter(r => r.some(c => String(c).trim() !== ""));
+
+          // Remove totals and duplicate header rows
+          rows = rows.filter(r => {
+            const first = String(r[0] || "").trim();
+            const lower = first.toLowerCase();
+            if (!first) return false;
+            if (lower.includes("whole team")) return false;
+            if (first === "Discord") return false;
+            return true;
+          });
+
+          players = rows.map(r => ({
+            Discord: r[0] ?? "",
+            Epic: r[1] ?? "",
+            GP: r[2] ?? "",
+            Points: r[3] ?? "",
+            Goals: r[4] ?? "",
+            Assists: r[5] ?? "",
+            Saves: r[6] ?? "",
+            Shots: r[7] ?? "",
+            GW: r[8] ?? "",
+            GL: r[9] ?? "",
+            MVPs: r[10] ?? "",
+            PPG: r[11] ?? "",
+            GAR: r[12] ?? "",
+            GSR: r[13] ?? "",
+            GSP: r[14] ?? ""
+          }));
+
+          filteredPlayers = [...players];
+
+          identifyTopPlayer();
+          buildHeader();
+          buildSummaryCards();
+          applySorting();
+          renderBody();
+          renderFoot();
+          updateStatusUI();
+        },
+        error: () => {
+          statusChip.innerHTML = "Failed to load data.";
+        }
+      });
+    }
+
+    function identifyTopPlayer() {
+      let bestPoints = -Infinity;
+      let bestDiscord = null;
+
+      players.forEach(p => {
+        const gp = parseNumber(p.GP);
+        const pts = parseNumber(p.Points);
+        if (gp > 0 && pts >= bestPoints) {
+          bestPoints = pts;
+          bestDiscord = p.Discord;
+        }
+      });
+
+      topPlayerDiscord = bestDiscord;
+    }
+
+    function buildHeader() {
+      let html = "<tr>";
+      COLS.forEach((label, idx) => {
+        html += `
+          <th data-index="${idx}">
+            <span class="label">
+              ${label}
+              <span class="sort-icon">▲</span>
+            </span>
+          </th>
+        `;
+      });
+      html += "</tr>";
+      tableHead.innerHTML = html;
+
+      tableHead.querySelectorAll("th").forEach(th => {
+        th.addEventListener("click", () => {
+          const idx = parseInt(th.dataset.index, 10);
+          if (sortState.index === idx) {
+            sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+          } else {
+            sortState.index = idx;
+            sortState.dir = "desc";
+          }
+          applySorting();
+          renderBody();
+          updateSortIcons();
+        });
+      });
+
+      updateSortIcons();
+    }
+
+    function updateSortIcons() {
+      tableHead.querySelectorAll("th").forEach(th => {
+        th.classList.remove("sorted-asc", "sorted-desc");
+        const idx = parseInt(th.dataset.index, 10);
+        if (idx === sortState.index) {
+          th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
+        }
+      });
+    }
+
+    function applySorting() {
+      filteredPlayers.sort((a, b) => {
+        const keys = Object.keys(a); // consistent order
+        const key = keys[sortState.index];
+        const av = a[key];
+        const bv = b[key];
+
+        const numericCol = sortState.index > 1; // treat first two as text, rest numeric
+
+        if (numericCol) {
+          const an = parseNumber(av);
+          const bn = parseNumber(bv);
+          return sortState.dir === "asc" ? an - bn : bn - an;
+        } else {
+          const as = String(av || "").toLowerCase();
+          const bs = String(bv || "").toLowerCase();
+          if (as < bs) return sortState.dir === "asc" ? -1 : 1;
+          if (as > bs) return sortState.dir === "asc" ? 1 : -1;
+          return 0;
+        }
+      });
+    }
+
+    function renderBody() {
+      let html = "";
+      const topDiscord = topPlayerDiscord;
+
+      filteredPlayers.forEach(p => {
+        const isTop = topDiscord && String(p.Discord).trim() === String(topDiscord).trim();
+        html += `<tr class="${isTop ? "top-player-row" : ""}">`;
+
+        // First cell: Discord + Epic + badge
+        html += `
+          <td>
+            <div class="player-cell">
+              <span class="player-main">${cleanValue(p.Discord)}</span>
+              <span class="player-sub">${cleanValue(p.Epic)}</span>
+              ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
+            </div>
+          </td>
+        `;
+
+        // Rest of stats
+        html += `<td>${cleanValue(p.Epic)}</td>`;
+        html += `<td>${cleanValue(p.GP)}</td>`;
+        html += `<td>${cleanValue(p.Points)}</td>`;
+        html += `<td>${cleanValue(p.Goals)}</td>`;
+        html += `<td>${cleanValue(p.Assists)}</td>`;
+        html += `<td>${cleanValue(p.Saves)}</td>`;
+        html += `<td>${cleanValue(p.Shots)}</td>`;
+        html += `<td>${cleanValue(p.GW)}</td>`;
+        html += `<td>${cleanValue(p.GL)}</td>`;
+        html += `<td>${cleanValue(p.MVPs)}</td>`;
+        html += `<td>${cleanValue(p.PPG)}</td>`;
+        html += `<td>${cleanValue(p.GAR)}</td>`;
+        html += `<td>${cleanValue(p.GSR)}</td>`;
+        html += `<td>${cleanValue(p.GSP)}</td>`;
+
+        html += "</tr>";
+      });
+
+      tableBody.innerHTML = html;
+
+      playerCountLabel.textContent =
+        `${filteredPlayers.length} player${filteredPlayers.length === 1 ? "" : "s"}`;
+    }
+
+    function renderFoot() {
+      const totals = new Array(COLS.length).fill(0);
+
+      players.forEach(p => {
+        const vals = [
+          p.Discord, p.Epic, p.GP, p.Points, p.Goals, p.Assists, p.Saves,
+          p.Shots, p.GW, p.GL, p.MVPs, p.PPG, p.GAR, p.GSR, p.GSP
+        ];
+        vals.forEach((v, idx) => {
+          if (idx <= 1) return; // skip text columns
+          totals[idx] += parseNumber(v);
+        });
+      });
+
+      let html = "<tr>";
+      COLS.forEach((label, idx) => {
+        if (idx === 0) {
+          html += "<td>Totals</td>";
+        } else if (idx === 1) {
+          html += "<td></td>";
+        } else {
+          const sum = totals[idx];
+          if (!sum) {
+            html += "<td></td>";
+          } else {
+            const rounded =
+              Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
+            html += `<td>${rounded}</td>`;
+          }
+        }
+      });
+      html += "</tr>";
+
+      tableFoot.innerHTML = html;
+    }
+
+    function buildSummaryCards() {
+      const totalGoals = players.reduce((acc, p) => acc + parseNumber(p.Goals), 0);
+      const totalPoints = players.reduce((acc, p) => acc + parseNumber(p.Points), 0);
+      const totalShots = players.reduce((acc, p) => acc + parseNumber(p.Shots), 0);
+      const totalGames = players.reduce((acc, p) => acc + parseNumber(p.GP), 0);
+      const roster = players.length;
+
+      const avgGoalsGame = totalGames ? (totalGoals / totalGames).toFixed(2) : "—";
+      const shotPct = totalGoals && totalShots
+        ? ((totalGoals / totalShots) * 100).toFixed(1) + "%"
+        : "—";
+      const avgPtsPlayer = totalPoints && roster
+        ? (totalPoints / roster).toFixed(1)
+        : "0";
+
+      const cards = [
+        {
+          label: "Total Goals",
+          value: totalGoals,
+          sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players"
+        },
+        {
+          label: "Total Points",
+          value: totalPoints,
+          sub: "Combined leaderboard score"
+        },
+        {
+          label: "Roster Size",
+          value: roster,
+          sub: "Players with stats recorded"
+        },
+        {
+          label: "Shot Accuracy",
+          value: shotPct,
+          sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data"
+        }
+      ];
+
+      let html = "";
+      cards.forEach(card => {
+        html += `
+          <article class="summary-card">
+            <div class="summary-glow"></div>
+            <div class="summary-label">${card.label}</div>
+            <div class="summary-value">${card.value}</div>
+            <div class="summary-sub">${card.sub}</div>
+          </article>
+        `;
+      });
+      summaryGrid.innerHTML = html;
+    }
+
+    function updateStatusUI() {
+      statusChip.innerHTML = "Live data loaded";
+      const now = new Date();
+      footerStatus.textContent =
+        "Last updated: " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function applySearchFilter() {
+      const term = (searchInput.value || "").toLowerCase().trim();
+      if (!term) {
+        filteredPlayers = [...players];
+      } else {
+        filteredPlayers = players.filter(p => {
+          const d = String(p.Discord || "").toLowerCase();
+          const e = String(p.Epic || "").toLowerCase();
+          return d.includes(term) || e.includes(term);
+        });
+      }
+      applySorting();
       renderBody();
-    };
-  });
-}
+    }
 
-/* ---------- SORTING ---------- */
-function sortRows(){
-  filtered.sort((a,b)=>{
-    let av = Object.values(a)[sortCol];
-    let bv = Object.values(b)[sortCol];
-    av = parseNum(av);
-    bv = parseNum(bv);
-    return sortDir === "asc" ? av - bv : bv - av;
-  });
-}
+    searchInput.addEventListener("input", applySearchFilter);
 
-/* ---------- RENDER BODY ---------- */
-function renderBody(){
-  const topDiscord = filtered.length ? filtered[0].Discord : null;
-
-  let html = "";
-  filtered.forEach(p=>{
-    const isTop = p.Discord === topDiscord;
-
-    html += `<tr class="${isTop ? "top-player-row" : ""}">`;
-
-    // first column = special layout
-    html += `
-      <td>
-        <div class="player-cell">
-          <span>${p.Discord}</span>
-          <span class="player-sub">${p.Epic}</span>
-          ${isTop ? `<span class="top-player-badge">★ Top Player</span>` : ""}
-        </div>
-      </td>
-    `;
-
-    // remaining stats
-    html += `<td>${p.Epic}</td>`;
-    html += `<td>${p.GP}</td>`;
-    html += `<td>${p.Points}</td>`;
-    html += `<td>${p.Goals}</td>`;
-    html += `<td>${p.Assists}</td>`;
-    html += `<td>${p.Saves}</td>`;
-    html += `<td>${p.Shots}</td>`;
-    html += `<td>${p.GW}</td>`;
-    html += `<td>${p.GL}</td>`;
-    html += `<td>${p.MVPs}</td>`;
-    html += `<td>${p.PPG}</td>`;
-    html += `<td>${p.GAR}</td>`;
-    html += `<td>${p.GSR}</td>`;
-    html += `<td>${p.GSP}</td>`;
-
-    html += "</tr>";
-  });
-
-  document.getElementById("tableBody").innerHTML = html;
-}
-
-/* ---------- FOOT TOTALS ---------- */
-function renderFoot(){
-  let totals = new Array(COLS.length).fill(0);
-
-  players.forEach(p=>{
-    Object.values(p).forEach((v,i)=>{
-      totals[i] += parseNum(v);
-    });
-  });
-
-  let html="<tr>";
-  COLS.forEach((c,i)=>{
-    if (i===0) html += "<td>Totals</td>";
-    else html += `<td>${totals[i] || ""}</td>`;
-  });
-  html+="</tr>";
-
-  document.getElementById("tableFoot").innerHTML = html;
-}
-
-/* ---------- SEARCH ---------- */
-document.getElementById("searchInput").addEventListener("input",e=>{
-  let q = e.target.value.toLowerCase();
-  filtered = players.filter(p =>
-    p.Discord.toLowerCase().includes(q) ||
-    p.Epic.toLowerCase().includes(q)
-  );
-  sortRows();
-  renderBody();
-});
-
-/* ---------- INIT ---------- */
-load();
-</script>
+    loadSheet();
+  </script>
 </body>
 </html>
