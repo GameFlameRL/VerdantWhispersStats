@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Mysters Rocket League – Esports Live Stats</title>
+  <title>Verdant Whispers Player Stats</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- CSV parser -->
@@ -15,6 +15,7 @@
       color: #e5e7eb;
     }
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 1.5rem 1rem 2.5rem;
@@ -26,6 +27,7 @@
         radial-gradient(circle at bottom, rgba(16,185,129,0.18), transparent 55%),
         #020617;
     }
+
     .app {
       width: 100%;
       max-width: 1200px;
@@ -40,6 +42,7 @@
       overflow: hidden;
     }
 
+    /* Glows */
     .glow {
       position: absolute;
       border-radius: 999px;
@@ -59,6 +62,7 @@
       background: rgba(45,212,191,0.7);
     }
 
+    /* Header */
     .header {
       display: flex;
       flex-wrap: wrap;
@@ -69,6 +73,7 @@
     }
     .title-block { display: flex; flex-direction: column; gap: 0.35rem; }
     .title-line { display: flex; align-items: center; gap: 0.7rem; }
+
     .app-title {
       font-size: clamp(1.8rem, 2.6vw + 1rem, 2.6rem);
       font-weight: 800;
@@ -94,13 +99,15 @@
       background: #fee2e2;
       box-shadow: 0 0 12px rgba(254,202,202,0.9);
     }
-    .subtitle { font-size: 0.9rem; color: #cbd5f5; opacity: 0.9; }
+
     .season-tag {
       font-size: 0.8rem;
       color: #9ca3af;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      display: flex; align-items: center; gap: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
       white-space: nowrap;
     }
     .status-dot {
@@ -110,30 +117,7 @@
       box-shadow: 0 0 12px rgba(34,197,94,0.9);
     }
 
-    .badges-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1.2rem;
-    }
-    .pill {
-      padding: 0.2rem 0.7rem;
-      border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.5);
-      background: rgba(15,23,42,0.95);
-      font-size: 0.7rem;
-      color: #cbd5f5;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      backdrop-filter: blur(10px);
-    }
-    .pill-dot {
-      width: 5px; height: 5px;
-      border-radius: 999px;
-      background: #60a5fa;
-    }
-
+    /* Summary cards */
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -143,6 +127,7 @@
     @media (min-width: 768px) {
       .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     }
+
     .summary-card {
       position: relative;
       border-radius: 1rem;
@@ -163,6 +148,7 @@
       0%,100% { transform: translateY(0); }
       50% { transform: translateY(-4px); }
     }
+
     .summary-label {
       font-size: 0.72rem;
       letter-spacing: 0.16em;
@@ -186,6 +172,7 @@
       pointer-events: none;
     }
 
+    /* Table card */
     .table-card {
       border-radius: 1.2rem;
       border: 1px solid rgba(148,163,184,0.5);
@@ -241,14 +228,19 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .table-scroll { max-height: 60vh; overflow:auto; }
-    table { width:100%; border-collapse:collapse; min-width:960px; }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      min-width:840px; /* more compact horizontally */
+    }
     thead {
       position: sticky; top:0; z-index:3;
       background: linear-gradient(to right,#020617,#020617 25%,#020617);
     }
     th, td {
-      padding: 0.55rem 0.7rem;
-      font-size: 0.8rem;
+      padding: 0.45rem 0.4rem;   /* tighter horizontally */
+      font-size: 0.78rem;        /* slightly smaller text */
       white-space: nowrap;
       text-align: right;
       border-bottom: 1px solid rgba(30,64,175,0.4);
@@ -258,6 +250,13 @@
       position:sticky; left:0; background:inherit; z-index:4;
     }
     th:nth-child(2), td:nth-child(2) { text-align:left; }
+
+    /* Center-align all numeric columns for equal spacing */
+    th:not(:first-child):not(:nth-child(2)),
+    td:not(:first-child):not(:nth-child(2)) {
+      text-align: center;
+    }
+
     th {
       font-weight:600;
       color:#9ca3af;
@@ -310,7 +309,7 @@
       font-size:0.72rem;
       color:#9ca3af;
       display:flex;
-      justify-content:space-between;
+      justify-content:flex-end;
       flex-wrap:wrap;
       gap:0.5rem;
     }
@@ -324,28 +323,21 @@
     <header class="header">
       <div class="title-block">
         <div class="title-line">
-          <h1 class="app-title">Mysters Rocket League</h1>
+          <h1 class="app-title">Verdant Whispers Player Stats</h1>
           <span class="live-badge">
             <span class="live-dot"></span>
             LIVE
           </span>
         </div>
-        <p class="subtitle">
-          Esports-style leaderboard with live stats from your Google Sheet.
-        </p>
+        <!-- Subtitle removed on purpose -->
       </div>
       <div class="season-tag">
         <span class="status-dot"></span>
-        SEASON STATS • AUTO SYNC
+        SEASON 1 STATS • AUTO SYNC
       </div>
     </header>
 
-    <div class="badges-row">
-      <span class="pill"><span class="pill-dot"></span> Powered by Google Sheets</span>
-      <span class="pill">↕ Click headers to sort</span>
-      <span class="pill">🔍 Search by Discord or Epic</span>
-      <span class="pill">★ Top player highlighted</span>
-    </div>
+    <!-- Feature badges removed -->
 
     <section class="summary-grid" id="summaryGrid"></section>
 
@@ -374,8 +366,7 @@
     </section>
 
     <div class="footer-note">
-      <span>Data source: Mysters Rocket League Google Sheet (live CSV export).</span>
-      <span id="footerStatus">Last updated: just now</span>
+      <span id="footerStatus">Last updated: —</span>
     </div>
   </div>
 
@@ -406,7 +397,6 @@
       if (val === undefined || val === null) return 0;
       const s = String(val);
       if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
-      // ✅ FIXED: real digit regex
       const match = s.match(/-?\d+(\.\d+)?/);
       if (!match) return 0;
       const n = parseFloat(match[0]);
@@ -532,12 +522,12 @@
 
     function applySorting() {
       filteredPlayers.sort((a, b) => {
-        const keys = Object.keys(a); // [Discord,Epic,GP,...]
+        const keys = Object.keys(a);
         const key = keys[sortState.index];
         const av = a[key];
         const bv = b[key];
 
-        const numericCol = sortState.index > 1; // first two text, rest numeric
+        const numericCol = sortState.index > 1;
 
         if (numericCol) {
           const an = parseNumber(av);
@@ -633,7 +623,8 @@
       const totalGames = players.reduce((acc,p)=>acc+parseNumber(p.GP),0);
       const roster = players.length;
 
-      const avgGoalsGame = totalGames ? (totalGoals/totalGames).toFixed(2) : "—";
+      // Multiply by 3 to account for 3 players per game
+      const avgGoalsGame = totalGames ? ((totalGoals / totalGames) * 3).toFixed(2) : "—";
       const shotPct = totalGoals && totalShots
         ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
         : "—";
@@ -667,10 +658,24 @@
     }
 
     function updateStatusUI() {
-      statusChip.textContent = "Live data loaded";
       const now = new Date();
+      const dateStr = now.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+      const timeStr = now.toLocaleTimeString(undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+
+      // More detailed last updated text
       footerStatus.textContent =
-        "Last updated: " + now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        `Last updated: ${dateStr} ${timeStr} (local time)`;
+
+      // Status chip – no "live data loaded" text
+      statusChip.textContent = `Synced at ${timeStr}`;
     }
 
     function applySearchFilter() {
