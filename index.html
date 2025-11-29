@@ -190,7 +190,7 @@
     }
     .table-title { font-size: 0.95rem; font-weight: 600; }
     .table-subtitle { font-size: 0.75rem; color: #cbd5f5; opacity: 0.85; }
-    .controls { display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; }
+    .controls { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; }
 
     .search-input {
       background: rgba(15,23,42,0.9);
@@ -232,15 +232,15 @@
     table {
       width:100%;
       border-collapse:collapse;
-      min-width:840px; /* more compact horizontally */
+      min-width:840px;
     }
     thead {
       position: sticky; top:0; z-index:3;
       background: linear-gradient(to right,#020617,#020617 25%,#020617);
     }
     th, td {
-      padding: 0.45rem 0.4rem;   /* tighter horizontally */
-      font-size: 0.78rem;        /* slightly smaller text */
+      padding: 0.45rem 0.4rem;
+      font-size: 0.78rem;
       white-space: nowrap;
       text-align: right;
       border-bottom: 1px solid rgba(30,64,175,0.4);
@@ -313,6 +313,50 @@
       flex-wrap:wrap;
       gap:0.5rem;
     }
+
+    /* ----- Toggle: Hide 0 GP players ----- */
+    .toggle-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: #cbd5f5;
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-container input {
+      display: none;
+    }
+    .toggle-track {
+      width: 38px;
+      height: 18px;
+      border-radius: 999px;
+      background: #475569;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.9);
+      transition: background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
+      transition: transform 0.2s ease;
+    }
+    .toggle-container input:checked + .toggle-track {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 0 10px rgba(34,197,94,0.7);
+    }
+    .toggle-container input:checked + .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+    }
+    .toggle-text {
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -329,15 +373,12 @@
             LIVE
           </span>
         </div>
-        <!-- Subtitle removed on purpose -->
       </div>
       <div class="season-tag">
         <span class="status-dot"></span>
         SEASON 1 STATS • AUTO SYNC
       </div>
     </header>
-
-    <!-- Feature badges removed -->
 
     <section class="summary-grid" id="summaryGrid"></section>
 
@@ -348,6 +389,15 @@
           <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
         <div class="controls">
+          <!-- NEW: toggle with nicer UI, default ON -->
+          <label class="toggle-container">
+            <input type="checkbox" id="hideZeroToggle" checked>
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-text">Hide players with 0 GP</span>
+          </label>
+
           <input id="searchInput" class="search-input" placeholder="Search players…" />
           <span class="status-chip" id="statusChip">
             <span class="tiny-spinner"></span>
@@ -389,6 +439,7 @@
     const tableFoot = document.getElementById("tableFoot");
     const summaryGrid = document.getElementById("summaryGrid");
     const searchInput = document.getElementById("searchInput");
+    const hideZeroToggle = document.getElementById("hideZeroToggle");
     const playerCountLabel = document.getElementById("playerCountLabel");
     const statusChip = document.getElementById("statusChip");
     const footerStatus = document.getElementById("footerStatus");
@@ -408,6 +459,10 @@
       const s = String(val).trim();
       if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
       return s;
+    }
+
+    function isZeroGPPlayer(p) {
+      return parseNumber(p.GP) === 0;
     }
 
     function loadSheet() {
@@ -452,8 +507,8 @@
           identifyTopPlayer();
           buildHeader();
           buildSummaryCards();
-          applySorting();
-          renderBody();
+          // Use filter pipeline (search + hide zero) on initial load
+          applySearchFilter();
           renderFoot();
           updateStatusUI();
         },
@@ -670,30 +725,32 @@
         second: "2-digit"
       });
 
-      // More detailed last updated text
       footerStatus.textContent =
         `Last updated: ${dateStr} ${timeStr} (local time)`;
 
-      // Status chip – no "live data loaded" text
       statusChip.textContent = `Synced at ${timeStr}`;
     }
 
     function applySearchFilter() {
       const term = (searchInput.value || "").toLowerCase().trim();
-      if (!term) {
-        filteredPlayers = [...players];
-      } else {
-        filteredPlayers = players.filter(p => {
-          const d = String(p.Discord || "").toLowerCase();
-          const e = String(p.Epic || "").toLowerCase();
-          return d.includes(term) || e.includes(term);
-        });
-      }
+      const hideZero = hideZeroToggle.checked;
+
+      filteredPlayers = players.filter(p => {
+        const d = String(p.Discord || "").toLowerCase();
+        const e = String(p.Epic || "").toLowerCase();
+
+        const matchesSearch = !term || d.includes(term) || e.includes(term);
+        const passesZero = !hideZero || !isZeroGPPlayer(p);
+
+        return matchesSearch && passesZero;
+      });
+
       applySorting();
       renderBody();
     }
 
     searchInput.addEventListener("input", applySearchFilter);
+    hideZeroToggle.addEventListener("change", applySearchFilter);
 
     loadSheet();
   </script>
