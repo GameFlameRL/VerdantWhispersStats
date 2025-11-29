@@ -376,7 +376,7 @@
       </div>
       <div class="season-tag">
         <span class="status-dot"></span>
-        SEASON 1 STATS • AUTO SYNC
+        SEASON 1 STATS
       </div>
     </header>
 
@@ -389,7 +389,7 @@
           <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
         <div class="controls">
-          <!-- NEW: toggle with nicer UI, default ON -->
+
           <label class="toggle-container">
             <input type="checkbox" id="hideZeroToggle" checked>
             <span class="toggle-track">
@@ -420,339 +420,341 @@
     </div>
   </div>
 
-  <script>
-    const SHEET_CSV_URL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
+<script>
+const SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-    const COLS = [
-      "Discord","Epic","GP","Points","Goals","Assists","Saves",
-      "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
-    ];
+const COLS = [
+  "Discord","Epic","GP","Points","Goals","Assists","Saves",
+  "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
+];
 
-    let players = [];
-    let filteredPlayers = [];
-    let sortState = { index: 3, dir: "desc" }; // default: Points desc
-    let topPlayerDiscord = null;
+let players = [];
+let filteredPlayers = [];
+let sortState = { index: 3, dir: "desc" }; 
+let topPlayerDiscord = null;
 
-    const tableHead = document.getElementById("tableHead");
-    const tableBody = document.getElementById("tableBody");
-    const tableFoot = document.getElementById("tableFoot");
-    const summaryGrid = document.getElementById("summaryGrid");
-    const searchInput = document.getElementById("searchInput");
-    const hideZeroToggle = document.getElementById("hideZeroToggle");
-    const playerCountLabel = document.getElementById("playerCountLabel");
-    const statusChip = document.getElementById("statusChip");
-    const footerStatus = document.getElementById("footerStatus");
+const tableHead = document.getElementById("tableHead");
+const tableBody = document.getElementById("tableBody");
+const tableFoot = document.getElementById("tableFoot");
+const summaryGrid = document.getElementById("summaryGrid");
+const searchInput = document.getElementById("searchInput");
+const hideZeroToggle = document.getElementById("hideZeroToggle");
+const playerCountLabel = document.getElementById("playerCountLabel");
+const statusChip = document.getElementById("statusChip");
+const footerStatus = document.getElementById("footerStatus");
 
-    function parseNumber(val) {
-      if (val === undefined || val === null) return 0;
-      const s = String(val);
-      if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
-      const match = s.match(/-?\d+(\.\d+)?/);
-      if (!match) return 0;
-      const n = parseFloat(match[0]);
-      return isNaN(n) ? 0 : n;
+function parseNumber(val) {
+  if (val === undefined || val === null) return 0;
+  const s = String(val);
+  if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
+  const match = s.match(/-?\d+(\.\d+)?/);
+  if (!match) return 0;
+  const n = parseFloat(match[0]);
+  return isNaN(n) ? 0 : n;
+}
+
+function cleanValue(val) {
+  if (val === undefined || val === null) return "";
+  const s = String(val).trim();
+  if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
+  return s;
+}
+
+function isZeroGPPlayer(p) {
+  return parseNumber(p.GP) === 0;
+}
+
+function loadSheet() {
+  Papa.parse(SHEET_CSV_URL, {
+    download: true,
+    header: false,
+    skipEmptyLines: true,
+    complete: (results) => {
+      let rows = results.data || [];
+
+      rows = rows.filter(r => r.some(c => String(c).trim() !== ""));
+
+      rows = rows.filter(r => {
+        const first = String(r[0] || "").trim();
+        const lower = first.toLowerCase();
+        if (!first) return false;
+        if (lower.includes("whole team")) return false;
+        if (first === "Discord") return false;
+        return true;
+      });
+
+      players = rows.map(r => ({
+        Discord: r[0] ?? "",
+        Epic: r[1] ?? "",
+        GP: r[2] ?? "",
+        Points: r[3] ?? "",
+        Goals: r[4] ?? "",
+        Assists: r[5] ?? "",
+        Saves: r[6] ?? "",
+        Shots: r[7] ?? "",
+        GW: r[8] ?? "",
+        GL: r[9] ?? "",
+        MVPs: r[10] ?? "",
+        PPG: r[11] ?? "",
+        GAR: r[12] ?? "",
+        GSR: r[13] ?? "",
+        GSP: r[14] ?? ""
+      }));
+
+      filteredPlayers = [...players];
+
+      identifyTopPlayer();
+      buildHeader();
+      buildSummaryCards();
+      applySearchFilter();
+      renderFoot();
+      updateStatusUI();
+    },
+    error: () => {
+      statusChip.innerHTML = "Failed to load data.";
     }
+  });
+}
 
-    function cleanValue(val) {
-      if (val === undefined || val === null) return "";
-      const s = String(val).trim();
-      if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
-      return s;
+function identifyTopPlayer() {
+  let bestPoints = -Infinity;
+  let bestDiscord = null;
+  players.forEach(p => {
+    const gp = parseNumber(p.GP);
+    const pts = parseNumber(p.Points);
+    if (gp > 0 && pts >= bestPoints) {
+      bestPoints = pts;
+      bestDiscord = p.Discord;
     }
+  });
+  topPlayerDiscord = bestDiscord;
+}
 
-    function isZeroGPPlayer(p) {
-      return parseNumber(p.GP) === 0;
-    }
+function buildHeader() {
+  let html = "<tr>";
+  COLS.forEach((label, idx) => {
+    html += `
+      <th data-index="${idx}">
+        <span class="label">
+          ${label}
+          <span class="sort-icon">▲</span>
+        </span>
+      </th>
+    `;
+  });
+  html += "</tr>";
+  tableHead.innerHTML = html;
 
-    function loadSheet() {
-      Papa.parse(SHEET_CSV_URL, {
-        download: true,
-        header: false,
-        skipEmptyLines: true,
-        complete: (results) => {
-          let rows = results.data || [];
-
-          rows = rows.filter(r => r.some(c => String(c).trim() !== ""));
-
-          rows = rows.filter(r => {
-            const first = String(r[0] || "").trim();
-            const lower = first.toLowerCase();
-            if (!first) return false;
-            if (lower.includes("whole team")) return false;
-            if (first === "Discord") return false;
-            return true;
-          });
-
-          players = rows.map(r => ({
-            Discord: r[0] ?? "",
-            Epic: r[1] ?? "",
-            GP: r[2] ?? "",
-            Points: r[3] ?? "",
-            Goals: r[4] ?? "",
-            Assists: r[5] ?? "",
-            Saves: r[6] ?? "",
-            Shots: r[7] ?? "",
-            GW: r[8] ?? "",
-            GL: r[9] ?? "",
-            MVPs: r[10] ?? "",
-            PPG: r[11] ?? "",
-            GAR: r[12] ?? "",
-            GSR: r[13] ?? "",
-            GSP: r[14] ?? ""
-          }));
-
-          filteredPlayers = [...players];
-
-          identifyTopPlayer();
-          buildHeader();
-          buildSummaryCards();
-          // Use filter pipeline (search + hide zero) on initial load
-          applySearchFilter();
-          renderFoot();
-          updateStatusUI();
-        },
-        error: () => {
-          statusChip.innerHTML = "Failed to load data.";
-        }
-      });
-    }
-
-    function identifyTopPlayer() {
-      let bestPoints = -Infinity;
-      let bestDiscord = null;
-      players.forEach(p => {
-        const gp = parseNumber(p.GP);
-        const pts = parseNumber(p.Points);
-        if (gp > 0 && pts >= bestPoints) {
-          bestPoints = pts;
-          bestDiscord = p.Discord;
-        }
-      });
-      topPlayerDiscord = bestDiscord;
-    }
-
-    function buildHeader() {
-      let html = "<tr>";
-      COLS.forEach((label, idx) => {
-        html += `
-          <th data-index="${idx}">
-            <span class="label">
-              ${label}
-              <span class="sort-icon">▲</span>
-            </span>
-          </th>
-        `;
-      });
-      html += "</tr>";
-      tableHead.innerHTML = html;
-
-      tableHead.querySelectorAll("th").forEach(th => {
-        th.addEventListener("click", () => {
-          const idx = parseInt(th.dataset.index, 10);
-          if (sortState.index === idx) {
-            sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
-          } else {
-            sortState.index = idx;
-            sortState.dir = "desc";
-          }
-          applySorting();
-          renderBody();
-          updateSortIcons();
-        });
-      });
-
-      updateSortIcons();
-    }
-
-    function updateSortIcons() {
-      tableHead.querySelectorAll("th").forEach(th => {
-        th.classList.remove("sorted-asc", "sorted-desc");
-        const idx = parseInt(th.dataset.index, 10);
-        if (idx === sortState.index) {
-          th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
-        }
-      });
-    }
-
-    function applySorting() {
-      filteredPlayers.sort((a, b) => {
-        const keys = Object.keys(a);
-        const key = keys[sortState.index];
-        const av = a[key];
-        const bv = b[key];
-
-        const numericCol = sortState.index > 1;
-
-        if (numericCol) {
-          const an = parseNumber(av);
-          const bn = parseNumber(bv);
-          return sortState.dir === "asc" ? an - bn : bn - an;
-        } else {
-          const as = String(av || "").toLowerCase();
-          const bs = String(bv || "").toLowerCase();
-          if (as < bs) return sortState.dir === "asc" ? -1 : 1;
-          if (as > bs) return sortState.dir === "asc" ? 1 : -1;
-          return 0;
-        }
-      });
-    }
-
-    function renderBody() {
-      let html = "";
-      const top = topPlayerDiscord;
-
-      filteredPlayers.forEach(p => {
-        const isTop = top && String(p.Discord).trim() === String(top).trim();
-        html += `<tr class="${isTop ? "top-player-row" : ""}">`;
-
-        html += `
-          <td>
-            <div class="player-cell">
-              <span class="player-main">${cleanValue(p.Discord)}</span>
-              <span class="player-sub">${cleanValue(p.Epic)}</span>
-              ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
-            </div>
-          </td>
-        `;
-
-        html += `<td>${cleanValue(p.Epic)}</td>`;
-        html += `<td>${cleanValue(p.GP)}</td>`;
-        html += `<td>${cleanValue(p.Points)}</td>`;
-        html += `<td>${cleanValue(p.Goals)}</td>`;
-        html += `<td>${cleanValue(p.Assists)}</td>`;
-        html += `<td>${cleanValue(p.Saves)}</td>`;
-        html += `<td>${cleanValue(p.Shots)}</td>`;
-        html += `<td>${cleanValue(p.GW)}</td>`;
-        html += `<td>${cleanValue(p.GL)}</td>`;
-        html += `<td>${cleanValue(p.MVPs)}</td>`;
-        html += `<td>${cleanValue(p.PPG)}</td>`;
-        html += `<td>${cleanValue(p.GAR)}</td>`;
-        html += `<td>${cleanValue(p.GSR)}</td>`;
-        html += `<td>${cleanValue(p.GSP)}</td>`;
-
-        html += "</tr>";
-      });
-
-      tableBody.innerHTML = html;
-      playerCountLabel.textContent =
-        `${filteredPlayers.length} player${filteredPlayers.length === 1 ? "" : "s"}`;
-    }
-
-    function renderFoot() {
-      const totals = new Array(COLS.length).fill(0);
-
-      players.forEach(p => {
-        const vals = [
-          p.Discord,p.Epic,p.GP,p.Points,p.Goals,p.Assists,p.Saves,
-          p.Shots,p.GW,p.GL,p.MVPs,p.PPG,p.GAR,p.GSR,p.GSP
-        ];
-        vals.forEach((v, idx) => {
-          if (idx <= 1) return;
-          totals[idx] += parseNumber(v);
-        });
-      });
-
-      let html = "<tr>";
-      COLS.forEach((_, idx) => {
-        if (idx === 0) html += "<td>Totals</td>";
-        else if (idx === 1) html += "<td></td>";
-        else {
-          const sum = totals[idx];
-          if (!sum) html += "<td></td>";
-          else {
-            const rounded =
-              Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
-            html += `<td>${rounded}</td>`;
-          }
-        }
-      });
-      html += "</tr>";
-      tableFoot.innerHTML = html;
-    }
-
-    function buildSummaryCards() {
-      const totalGoals = players.reduce((acc,p)=>acc+parseNumber(p.Goals),0);
-      const totalPoints = players.reduce((acc,p)=>acc+parseNumber(p.Points),0);
-      const totalShots = players.reduce((acc,p)=>acc+parseNumber(p.Shots),0);
-      const totalGames = players.reduce((acc,p)=>acc+parseNumber(p.GP),0);
-      const roster = players.length;
-
-      // Multiply by 3 to account for 3 players per game
-      const avgGoalsGame = totalGames ? ((totalGoals / totalGames) * 3).toFixed(2) : "—";
-      const shotPct = totalGoals && totalShots
-        ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
-        : "—";
-      const avgPtsPlayer = totalPoints && roster
-        ? (totalPoints/roster).toFixed(1)
-        : "0";
-
-      const cards = [
-        { label:"Total Goals", value:totalGoals,
-          sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" },
-        { label:"Total Points", value:totalPoints,
-          sub:"Combined leaderboard score" },
-        { label:"Roster Size", value:roster,
-          sub:"Players with stats recorded" },
-        { label:"Shot Accuracy", value:shotPct,
-          sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" }
-      ];
-
-      let html = "";
-      cards.forEach(c=>{
-        html += `
-          <article class="summary-card">
-            <div class="summary-glow"></div>
-            <div class="summary-label">${c.label}</div>
-            <div class="summary-value">${c.value}</div>
-            <div class="summary-sub">${c.sub}</div>
-          </article>
-        `;
-      });
-      summaryGrid.innerHTML = html;
-    }
-
-    function updateStatusUI() {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      });
-      const timeStr = now.toLocaleTimeString(undefined, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit"
-      });
-
-      footerStatus.textContent =
-        `Last updated: ${dateStr} ${timeStr} (local time)`;
-
-      statusChip.textContent = `Synced at ${timeStr}`;
-    }
-
-    function applySearchFilter() {
-      const term = (searchInput.value || "").toLowerCase().trim();
-      const hideZero = hideZeroToggle.checked;
-
-      filteredPlayers = players.filter(p => {
-        const d = String(p.Discord || "").toLowerCase();
-        const e = String(p.Epic || "").toLowerCase();
-
-        const matchesSearch = !term || d.includes(term) || e.includes(term);
-        const passesZero = !hideZero || !isZeroGPPlayer(p);
-
-        return matchesSearch && passesZero;
-      });
-
+  tableHead.querySelectorAll("th").forEach(th => {
+    th.addEventListener("click", () => {
+      const idx = parseInt(th.dataset.index, 10);
+      if (sortState.index === idx) {
+        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+      } else {
+        sortState.index = idx;
+        sortState.dir = "desc";
+      }
       applySorting();
       renderBody();
+      updateSortIcons();
+    });
+  });
+
+  updateSortIcons();
+}
+
+function updateSortIcons() {
+  tableHead.querySelectorAll("th").forEach(th => {
+    th.classList.remove("sorted-asc", "sorted-desc");
+    const idx = parseInt(th.dataset.index, 10);
+    if (idx === sortState.index) {
+      th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
     }
+  });
+}
 
-    searchInput.addEventListener("input", applySearchFilter);
-    hideZeroToggle.addEventListener("change", applySearchFilter);
+function applySorting() {
+  filteredPlayers.sort((a, b) => {
+    const keys = Object.keys(a);
+    const key = keys[sortState.index];
+    const av = a[key];
+    const bv = b[key];
 
-    loadSheet();
-  </script>
+    const numericCol = sortState.index > 1;
+
+    if (numericCol) {
+      const an = parseNumber(av);
+      const bn = parseNumber(bv);
+      return sortState.dir === "asc" ? an - bn : bn - an;
+    } else {
+      const as = String(av || "").toLowerCase();
+      const bs = String(bv || "").toLowerCase();
+      if (as < bs) return sortState.dir === "asc" ? -1 : 1;
+      if (as > bs) return sortState.dir === "asc" ? 1 : -1;
+      return 0;
+    }
+  });
+}
+
+function renderBody() {
+  let html = "";
+  const top = topPlayerDiscord;
+
+  filteredPlayers.forEach(p => {
+    const isTop = top && String(p.Discord).trim() === String(top).trim();
+    html += `<tr class="${isTop ? "top-player-row" : ""}">`;
+
+    html += `
+      <td>
+        <div class="player-cell">
+          <span class="player-main">${cleanValue(p.Discord)}</span>
+          <span class="player-sub">${cleanValue(p.Epic)}</span>
+          ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
+        </div>
+      </td>
+    `;
+
+    html += `<td>${cleanValue(p.Epic)}</td>`;
+    html += `<td>${cleanValue(p.GP)}</td>`;
+    html += `<td>${cleanValue(p.Points)}</td>`;
+    html += `<td>${cleanValue(p.Goals)}</td>`;
+    html += `<td>${cleanValue(p.Assists)}</td>`;
+    html += `<td>${cleanValue(p.Saves)}</td>`;
+    html += `<td>${cleanValue(p.Shots)}</td>`;
+    html += `<td>${cleanValue(p.GW)}</td>`;
+    html += `<td>${cleanValue(p.GL)}</td>`;
+    html += `<td>${cleanValue(p.MVPs)}</td>`;
+    html += `<td>${cleanValue(p.PPG)}</td>`;
+    html += `<td>${cleanValue(p.GAR)}</td>`;
+    html += `<td>${cleanValue(p.GSR)}</td>`;
+    html += `<td>${cleanValue(p.GSP)}</td>`;
+
+    html += "</tr>";
+  });
+
+  tableBody.innerHTML = html;
+  playerCountLabel.textContent =
+    `${filteredPlayers.length} player${filteredPlayers.length === 1 ? "" : "s"}`;
+}
+
+function renderFoot() {
+  const totals = new Array(COLS.length).fill(0);
+
+  players.forEach(p => {
+    const vals = [
+      p.Discord,p.Epic,p.GP,p.Points,p.Goals,p.Assists,p.Saves,
+      p.Shots,p.GW,p.GL,p.MVPs,p.PPG,p.GAR,p.GSR,p.GSP
+    ];
+    vals.forEach((v, idx) => {
+      if (idx <= 1) return;
+      totals[idx] += parseNumber(v);
+    });
+  });
+
+  let html = "<tr>";
+  COLS.forEach((_, idx) => {
+    if (idx === 0) html += "<td>Totals</td>";
+    else if (idx === 1) html += "<td></td>";
+    else {
+      const sum = totals[idx];
+      if (!sum) html += "<td></td>";
+      else {
+        const rounded =
+          Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
+        html += `<td>${rounded}</td>`;
+      }
+    }
+  });
+  html += "</tr>";
+  tableFoot.innerHTML = html;
+}
+
+function buildSummaryCards() {
+  const totalGoals = players.reduce((acc,p)=>acc+parseNumber(p.Goals),0);
+  const totalPoints = players.reduce((acc,p)=>acc+parseNumber(p.Points),0);
+  const totalShots = players.reduce((acc,p)=>acc+parseNumber(p.Shots),0);
+  const totalGames = players.reduce((acc,p)=>acc+parseNumber(p.GP),0);
+  const roster = players.length;
+
+  const avgGoalsGame = totalGames ? ((totalGoals / totalGames) * 3).toFixed(2) : "—";
+  const shotPct = totalGoals && totalShots
+    ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
+    : "—";
+  const avgPtsPlayer = totalPoints && roster
+    ? (totalPoints/roster).toFixed(1)
+    : "0";
+
+  const cards = [
+    { label:"Total Points", value:totalPoints,
+      sub:"Combined leaderboard score" },
+
+    { label:"Shot Accuracy", value:shotPct,
+      sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" },
+
+    { label:"Roster Size", value:roster,
+      sub:"Players" },
+
+    { label:"Total Goals", value:totalGoals,
+      sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" }
+  ];
+
+  let html = "";
+  cards.forEach(c=>{
+    html += `
+      <article class="summary-card">
+        <div class="summary-glow"></div>
+        <div class="summary-label">${c.label}</div>
+        <div class="summary-value">${c.value}</div>
+        <div class="summary-sub">${c.sub}</div>
+      </article>
+    `;
+  });
+  summaryGrid.innerHTML = html;
+}
+
+function updateStatusUI() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+  const timeStr = now.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  footerStatus.textContent =
+    `Last updated: ${dateStr} ${timeStr} (local time)`;
+
+  statusChip.textContent = `Synced at ${timeStr}`;
+}
+
+function applySearchFilter() {
+  const term = (searchInput.value || "").toLowerCase().trim();
+  const hideZero = hideZeroToggle.checked;
+
+  filteredPlayers = players.filter(p => {
+    const d = String(p.Discord || "").toLowerCase();
+    const e = String(p.Epic || "").toLowerCase();
+
+    const matchesSearch = !term || d.includes(term) || e.includes(term);
+    const passesZero = !hideZero || !isZeroGPPlayer(p);
+
+    return matchesSearch && passesZero;
+  });
+
+  applySorting();
+  renderBody();
+}
+
+searchInput.addEventListener("input", applySearchFilter);
+hideZeroToggle.addEventListener("change", applySearchFilter);
+
+loadSheet();
+</script>
+
 </body>
 </html>
