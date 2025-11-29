@@ -133,7 +133,7 @@
       border-radius: 1rem;
       padding: 0.8rem 0.9rem;
       border: 1px solid rgba(148,163,184,0.45);
-      background: radial-gradient(circle at top left, rgba(37,99,235,0.4), rgba(15,23,42,0.95));
+      background: radial-gradient(circle at top left, rgba(37,99,235,0.35), rgba(15,23,42,0.98));
       box-shadow: 0 18px 35px rgba(15,23,42,0.9);
       overflow: hidden;
       backdrop-filter: blur(18px);
@@ -163,13 +163,10 @@
       opacity: 0.85;
       margin-top: 0.1rem;
     }
+
+    /* hide the old glow circle */
     .summary-glow {
-      position: absolute;
-      right: -20px; top: -20px;
-      width: 80px; height: 80px;
-      background: radial-gradient(circle, rgba(56,189,248,0.8), transparent 55%);
-      opacity: 0.45;
-      pointer-events: none;
+      display: none;
     }
 
     /* Table card */
@@ -287,13 +284,6 @@
       border-left:3px solid #facc15;
       box-shadow:inset 0 0 0 1px rgba(250,204,21,0.25);
       background:radial-gradient(circle at left,rgba(250,204,21,0.16),rgba(15,23,42,0.96));
-    }
-    .top-player-badge {
-      font-size:0.65rem;
-      color:#facc15;
-      text-transform:uppercase;
-      letter-spacing:0.14em;
-      margin-top:0.05rem;
     }
 
     tfoot td {
@@ -423,8 +413,8 @@ const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
 /*
-  We now have ONE visible player column ("Player") that
-  shows Discord (bold) and Epic (smaller) together.
+  One visible player column ("Player") that shows
+  Discord (bold) and Epic (smaller) together.
 */
 const COLS = [
   "Player","GP","Points","Goals","Assists","Saves",
@@ -624,13 +614,12 @@ function renderBody() {
     const isTop = top && String(p.Discord).trim() === String(top).trim();
     html += `<tr class="${isTop ? "top-player-row" : ""}">`;
 
-    // Combined player cell: Discord + Epic underneath
+    // Combined player cell: Discord + Epic underneath (no badge now)
     html += `
       <td>
         <div class="player-cell">
           <span class="player-main">${cleanValue(p.Discord)}</span>
           <span class="player-sub">${cleanValue(p.Epic)}</span>
-          ${isTop ? '<span class="top-player-badge">★ Top Points</span>' : ""}
         </div>
       </td>
     `;
@@ -732,22 +721,20 @@ function buildSummaryCards() {
   const shotPct = totalGoals && totalShots
     ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
     : "—";
-  const avgPtsPlayer = totalPoints && roster
-    ? (totalPoints/roster).toFixed(1)
-    : "0";
 
+  // ORDER: Roster Size, Total Points, Total Goals, Shot Accuracy
   const cards = [
-    { label:"Total Points", value:totalPoints,
-      sub:"Combined leaderboard score" },
-
-    { label:"Shot Accuracy", value:shotPct,
-      sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" },
-
     { label:"Roster Size", value:roster,
       sub:"Players" },
 
+    { label:"Total Points", value:totalPoints,
+      sub:"Combined leaderboard score" },
+
     { label:"Total Goals", value:totalGoals,
-      sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" }
+      sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" },
+
+    { label:"Shot Accuracy", value:shotPct,
+      sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" }
   ];
 
   let html = "";
