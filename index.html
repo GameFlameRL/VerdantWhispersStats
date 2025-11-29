@@ -164,7 +164,7 @@
       margin-top: 0.1rem;
     }
 
-    /* hide the old glow circle */
+    /* hide circle glow in stat cards */
     .summary-glow {
       display: none;
     }
@@ -280,10 +280,13 @@
     .player-main { font-size:0.82rem; font-weight:600; }
     .player-sub { font-size:0.72rem; color:#9ca3af; }
 
+    /* Highlight row for top player (visual unchanged) */
     .top-player-row {
-      border-left:3px solid #facc15;
-      box-shadow:inset 0 0 0 1px rgba(250,204,21,0.25);
-      background:radial-gradient(circle at left,rgba(250,204,21,0.16),rgba(15,23,42,0.96));
+      border-left:3px solid #22c55e;
+      box-shadow:
+        inset 0 0 0 1px rgba(16,185,129,0.25),
+        0 0 18px rgba(16,185,129,0.35);
+      background:radial-gradient(circle at left,rgba(16,185,129,0.12),rgba(15,23,42,0.96));
     }
 
     tfoot td {
@@ -527,18 +530,55 @@ function loadSheet() {
   });
 }
 
+/*
+  Top player selection:
+
+  1. Highest MVPs
+  2. Then highest GW
+  3. Then highest Goals
+  4. Then highest Assists
+  5. Then highest Av. PPG
+
+  Only players with GP > 0 are eligible.
+*/
 function identifyTopPlayer() {
-  let bestPoints = -Infinity;
-  let bestDiscord = null;
+  let best = null;
+
   players.forEach(p => {
-    const gp = parseNumber(p.GP);
-    const pts = parseNumber(p.Points);
-    if (gp > 0 && pts >= bestPoints) {
-      bestPoints = pts;
-      bestDiscord = p.Discord;
+    const gp  = parseNumber(p.GP);
+    if (gp <= 0) return; // ignore players with no games
+
+    const mvp = parseNumber(p.MVPs);
+    const gw  = parseNumber(p.GW);
+    const g   = parseNumber(p.Goals);
+    const a   = parseNumber(p.Assists);
+    const ppg = parseNumber(p.PPG);
+
+    const current = { p, mvp, gw, g, a, ppg };
+
+    if (!best) {
+      best = current;
+      return;
     }
+
+    // Compare according to priority chain
+    if (mvp > best.mvp) { best = current; return; }
+    if (mvp < best.mvp) { return; }
+
+    if (gw > best.gw) { best = current; return; }
+    if (gw < best.gw) { return; }
+
+    if (g > best.g) { best = current; return; }
+    if (g < best.g) { return; }
+
+    if (a > best.a) { best = current; return; }
+    if (a < best.a) { return; }
+
+    if (ppg > best.ppg) { best = current; return; }
+    // If equal all the way down, keep existing best
   });
-  topPlayerDiscord = bestDiscord;
+
+  topPlayerDiscord = best ? best.p.Discord : null;
 }
 
 function buildHeader() {
@@ -614,7 +654,7 @@ function renderBody() {
     const isTop = top && String(p.Discord).trim() === String(top).trim();
     html += `<tr class="${isTop ? "top-player-row" : ""}">`;
 
-    // Combined player cell: Discord + Epic underneath (no badge now)
+    // Combined player cell: Discord + Epic underneath
     html += `
       <td>
         <div class="player-cell">
