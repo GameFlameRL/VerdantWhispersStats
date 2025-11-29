@@ -56,10 +56,9 @@
       top: -80px; right: -60px;
       background: rgba(59,130,246,0.7);
     }
+    /* hide the green bottom-left glow */
     .glow.teal {
-      width: 300px; height: 300px;
-      bottom: -120px; left: -80px;
-      background: rgba(45,212,191,0.7);
+      display: none;
     }
 
     /* Header */
@@ -164,7 +163,7 @@
       margin-top: 0.1rem;
     }
 
-    .summary-glow { display: false; }
+    .summary-glow { display: none; }
 
     /* Table card */
     .table-card {
@@ -243,8 +242,18 @@
     tbody tr:nth-child(odd) { background:rgba(15,23,42,0.9); }
     tbody tr:hover { background:rgba(37,99,235,0.35); }
 
-    .player-cell { display:flex; flex-direction:row; align-items:center; gap:0.3rem; line-height:1.2; }
-    .player-text { display:flex; flex-direction:column; gap:0.08rem; }
+    .player-cell {
+      display:flex;
+      flex-direction:row;
+      align-items:center;
+      gap:0.3rem;
+      line-height:1.2;
+    }
+    .player-text {
+      display:flex;
+      flex-direction:column;
+      gap:0.08rem;
+    }
     .player-main { font-size:0.82rem; font-weight:600; }
     .player-sub { font-size:0.72rem; color:#9ca3af; }
 
@@ -252,9 +261,10 @@
       font-size: 0.8rem;
       color: #fbbf24;
       text-shadow: 0 0 6px rgba(251,191,36,0.8);
+      margin-left: 0.2rem;
     }
 
-    /* Gold highlight but subtle (no full-row glow) */
+    /* Gold highlight but subtle */
     .top-player-row {
       border-left: 3px solid #fbbf24;
       background: linear-gradient(to right, rgba(251,191,36,0.10), rgba(15,23,42,0.98));
@@ -443,7 +453,7 @@ function loadSheet(){
 }
 
 /* Top player logic:
-   MVPs -> GW -> Goals -> Assists -> Av. PPG (PPG column) ; GP > 0 only */
+   MVPs -> GW -> Goals -> Assists -> Av. PPG ; GP > 0 only */
 function identifyTopPlayer(){
   let best=null;
   players.forEach(p=>{
@@ -540,11 +550,11 @@ function renderBody(){
     h+=`
       <td>
         <div class="player-cell">
-          ${isTop ? '<span class="top-star">★</span>' : ''}
           <div class="player-text">
             <span class="player-main">${cleanValue(p.Discord)}</span>
             <span class="player-sub">${cleanValue(p.Epic)}</span>
           </div>
+          ${isTop ? '<span class="top-star">★</span>' : ''}
         </div>
       </td>
     `;
@@ -561,8 +571,7 @@ function renderBody(){
     h+=`<td>${cleanValue(p.PPG)}</td>`;
     h+=`<td>${cleanValue(p.GAR)}</td>`;
     h+=`<td>${cleanValue(p.GSR)}</td>`;
-    h+=`<td>${cleanValue(p.GSP)}</td>`;
-
+    h+=`<td>${cleanValue(pGSP)}</td>`;
     h+="</tr>";
   });
 
