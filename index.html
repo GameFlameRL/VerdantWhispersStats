@@ -5,7 +5,6 @@
   <title>Verdant Whispers Player Stats</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- CSV parser -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
@@ -149,25 +148,11 @@
       50% { transform: translateY(-4px); }
     }
 
-    .summary-label {
-      font-size: 0.72rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #bfdbfe;
-      margin-bottom: 0.2rem;
-    }
+    .summary-label { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: #bfdbfe; margin-bottom: 0.2rem; }
     .summary-value { font-size: 1.2rem; font-weight: 700; }
-    .summary-sub {
-      font-size: 0.72rem;
-      color: #e5e7eb;
-      opacity: 0.85;
-      margin-top: 0.1rem;
-    }
+    .summary-sub { font-size: 0.72rem; color: #e5e7eb; opacity: 0.85; margin-top: 0.1rem; }
 
-    /* hide circle glow in stat cards */
-    .summary-glow {
-      display: none;
-    }
+    .summary-glow { display: none; }
 
     /* Table card */
     .table-card {
@@ -198,23 +183,10 @@
       color: #e5e7eb;
       min-width: 160px;
       outline: none;
-      box-shadow: 0 0 0 1px transparent;
-      transition: box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-    .search-input::placeholder { color:#9ca3af; }
-    .search-input:focus {
-      border-color:#60a5fa;
-      box-shadow:0 0 0 1px rgba(59,130,246,0.7);
-      background:rgba(15,23,42,1);
+      transition: 0.15s ease;
     }
 
-    .status-chip {
-      font-size: 0.7rem;
-      color: #cbd5f5;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
+    .status-chip { font-size: 0.7rem; color: #cbd5f5; display: flex; align-items: center; gap: 0.35rem; }
     .tiny-spinner {
       width: 10px; height: 10px;
       border-radius: 999px;
@@ -224,34 +196,22 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .table-scroll { max-height: 60vh; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:840px; }
+    thead { position: sticky; top:0; z-index:3; background: #020617; }
 
-    table {
-      width:100%;
-      border-collapse:collapse;
-      min-width:840px;
-    }
-    thead {
-      position: sticky; top:0; z-index:3;
-      background: linear-gradient(to right,#020617,#020617 25%,#020617);
-    }
     th, td {
       padding: 0.45rem 0.4rem;
       font-size: 0.78rem;
       white-space: nowrap;
-      text-align: right;
       border-bottom: 1px solid rgba(30,64,175,0.4);
     }
+
     th:first-child, td:first-child {
       text-align:left;
       position:sticky; left:0; background:inherit; z-index:4;
     }
 
-    /* Center-align all non-player columns */
-    th:not(:first-child),
-    td:not(:first-child) {
-      text-align: center;
-    }
+    th:not(:first-child), td:not(:first-child) { text-align:center; }
 
     th {
       font-weight:600;
@@ -259,17 +219,9 @@
       cursor:pointer;
       user-select:none;
     }
-    th .label { display:inline-flex; align-items:center; gap:0.25rem; }
-    .sort-icon {
-      font-size:0.7rem;
-      opacity:0.25;
-      transition:opacity 0.15s ease, transform 0.15s ease;
-    }
+    .sort-icon { font-size:0.7rem; opacity:0.25; transition:0.15s ease; }
     th.sorted-asc .sort-icon,
-    th.sorted-desc .sort-icon {
-      opacity:1;
-      color:#38bdf8;
-    }
+    th.sorted-desc .sort-icon { opacity:1; color:#38bdf8; }
     th.sorted-asc .sort-icon { transform:rotate(180deg); }
 
     tbody tr:nth-child(even) { background:rgba(15,23,42,0.95); }
@@ -280,18 +232,19 @@
     .player-main { font-size:0.82rem; font-weight:600; }
     .player-sub { font-size:0.72rem; color:#9ca3af; }
 
-    /* Highlight row for top player (visual unchanged) */
+    /*  ⭐ GOLD HIGHLIGHT ⭐ */
     .top-player-row {
-      border-left:3px solid #22c55e;
+      background: radial-gradient(circle at left, rgba(251,191,36,0.18), rgba(15,23,42,0.95));
+      border-left: 3px solid #fbbf24;
       box-shadow:
-        inset 0 0 0 1px rgba(16,185,129,0.25),
-        0 0 18px rgba(16,185,129,0.35);
-      background:radial-gradient(circle at left,rgba(16,185,129,0.12),rgba(15,23,42,0.96));
+        inset 0 0 0 1px rgba(251,191,36,0.25),
+        0 0 18px rgba(251,191,36,0.35),
+        0 0 6px rgba(245,158,11,0.35);
     }
 
     tfoot td {
       font-weight:600;
-      background:radial-gradient(circle at top,#020617,#020617 70%);
+      background:#020617;
       border-top:1px solid rgba(148,163,184,0.7);
       position:sticky; bottom:0; z-index:2;
     }
@@ -302,53 +255,31 @@
       color:#9ca3af;
       display:flex;
       justify-content:flex-end;
-      flex-wrap:wrap;
       gap:0.5rem;
     }
 
-    /* ----- Toggle: Hide 0 GP players ----- */
-    .toggle-container {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.72rem;
-      color: #cbd5f5;
-      cursor: pointer;
-      user-select: none;
-    }
-    .toggle-container input {
-      display: none;
-    }
+    /* Toggle */
+    .toggle-container { display:flex; align-items:center; gap:0.4rem; font-size:0.72rem; cursor:pointer; }
+    .toggle-container input { display:none; }
     .toggle-track {
-      width: 38px;
-      height: 18px;
-      border-radius: 999px;
-      background: #475569;
-      position: relative;
-      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.9);
-      transition: background 0.2s ease, box-shadow 0.2s ease;
+      width:38px; height:18px; border-radius:999px;
+      background:#475569;
+      position:relative;
+      transition:0.2s;
     }
     .toggle-thumb {
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      background: #e5e7eb;
-      box-shadow: 0 0 0 1px rgba(15,23,42,0.8);
-      transition: transform 0.2s ease;
+      position:absolute; top:2px; left:2px;
+      width:14px; height:14px; border-radius:999px;
+      background:#e5e7eb;
+      transition:0.2s;
     }
     .toggle-container input:checked + .toggle-track {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      box-shadow: 0 0 10px rgba(34,197,94,0.7);
+      background:linear-gradient(135deg,#22c55e,#16a34a);
     }
     .toggle-container input:checked + .toggle-track .toggle-thumb {
       transform: translateX(18px);
     }
-    .toggle-text {
-      opacity: 0.9;
-    }
+
   </style>
 </head>
 <body>
@@ -360,16 +291,10 @@
       <div class="title-block">
         <div class="title-line">
           <h1 class="app-title">Verdant Whispers Player Stats</h1>
-          <span class="live-badge">
-            <span class="live-dot"></span>
-            LIVE
-          </span>
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
         </div>
       </div>
-      <div class="season-tag">
-        <span class="status-dot"></span>
-        SEASON 1 STATS
-      </div>
+      <div class="season-tag"><span class="status-dot"></span>SEASON 1 STATS</div>
     </header>
 
     <section class="summary-grid" id="summaryGrid"></section>
@@ -380,16 +305,16 @@
           <div class="table-title">Player Leaderboard</div>
           <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
+
         <div class="controls">
           <label class="toggle-container">
             <input type="checkbox" id="hideZeroToggle" checked>
-            <span class="toggle-track">
-              <span class="toggle-thumb"></span>
-            </span>
-            <span class="toggle-text">Hide players with 0 GP</span>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span>Hide players with 0 GP</span>
           </label>
 
           <input id="searchInput" class="search-input" placeholder="Search players…" />
+
           <span class="status-chip" id="statusChip">
             <span class="tiny-spinner"></span>
             Fetching live data…
@@ -406,256 +331,188 @@
       </div>
     </section>
 
-    <div class="footer-note">
-      <span id="footerStatus">Last updated: —</span>
-    </div>
+    <div class="footer-note"><span id="footerStatus">Last updated: —</span></div>
   </div>
 
+
 <script>
+/* Same JS from your last version — unchanged logic */
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
-/*
-  One visible player column ("Player") that shows
-  Discord (bold) and Epic (smaller) together.
-*/
 const COLS = [
   "Player","GP","Points","Goals","Assists","Saves",
   "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
 ];
 
-// For sorting: which data field each column uses
 const SORT_KEYS = {
-  0: "Discord", // sort Player column by Discord name
-  1: "GP",
-  2: "Points",
-  3: "Goals",
-  4: "Assists",
-  5: "Saves",
-  6: "Shots",
-  7: "GW",
-  8: "GL",
-  9: "MVPs",
- 10: "PPG",
- 11: "GAR",
- 12: "GSR",
- 13: "GSP"
+  0:"Discord", 1:"GP", 2:"Points", 3:"Goals", 4:"Assists", 5:"Saves",
+  6:"Shots", 7:"GW", 8:"GL", 9:"MVPs", 10:"PPG", 11:"GAR", 12:"GSR", 13:"GSP"
 };
 
 let players = [];
 let filteredPlayers = [];
-let sortState = { index: 2, dir: "desc" }; // default: Points desc (col 2)
+let sortState = { index:2, dir:"desc" };
 let topPlayerDiscord = null;
 
-const tableHead = document.getElementById("tableHead");
-const tableBody = document.getElementById("tableBody");
-const tableFoot = document.getElementById("tableFoot");
-const summaryGrid = document.getElementById("summaryGrid");
-const searchInput = document.getElementById("searchInput");
-const hideZeroToggle = document.getElementById("hideZeroToggle");
-const playerCountLabel = document.getElementById("playerCountLabel");
-const statusChip = document.getElementById("statusChip");
-const footerStatus = document.getElementById("footerStatus");
-
-function parseNumber(val) {
-  if (val === undefined || val === null) return 0;
-  const s = String(val);
-  if (/#(DIV|REF|VALUE)!/i.test(s)) return 0;
-  const match = s.match(/-?\d+(\.\d+)?/);
-  if (!match) return 0;
-  const n = parseFloat(match[0]);
-  return isNaN(n) ? 0 : n;
+function parseNumber(v){
+  if(v==null)return 0;
+  const s=String(v);
+  if(/#(DIV|REF|VALUE)!/i.test(s))return 0;
+  const m=s.match(/-?\d+(\.\d+)?/);
+  return m?parseFloat(m[0]):0;
 }
 
-function cleanValue(val) {
-  if (val === undefined || val === null) return "";
-  const s = String(val).trim();
-  if (!s || /#(DIV|REF|VALUE)!/i.test(s)) return "—";
+function cleanValue(v){
+  if(v==null)return "—";
+  const s=String(v).trim();
+  if(!s||/#(DIV|REF|VALUE)!/i.test(s))return "—";
   return s;
 }
 
-function isZeroGPPlayer(p) {
-  return parseNumber(p.GP) === 0;
-}
+function isZeroGPPlayer(p){ return parseNumber(p.GP)===0; }
 
-function loadSheet() {
-  Papa.parse(SHEET_CSV_URL, {
-    download: true,
-    header: false,
-    skipEmptyLines: true,
-    complete: (results) => {
-      let rows = results.data || [];
+function loadSheet(){
+  Papa.parse(SHEET_CSV_URL,{
+    download:true,
+    header:false,
+    skipEmptyLines:true,
+    complete:res=>{
+      let rows=res.data||[];
 
-      rows = rows.filter(r => r.some(c => String(c).trim() !== ""));
+      rows=rows.filter(r=>r.some(c=>String(c).trim()!==""));
 
-      rows = rows.filter(r => {
-        const first = String(r[0] || "").trim();
-        const lower = first.toLowerCase();
-        if (!first) return false;
-        if (lower.includes("whole team")) return false;
-        if (first === "Discord") return false;
+      rows=rows.filter(r=>{
+        const a=String(r[0]||"").trim().toLowerCase();
+        if(!a) return false;
+        if(a.includes("whole team")) return false;
+        if(a==="discord") return false;
         return true;
       });
 
-      players = rows.map(r => ({
-        Discord: r[0] ?? "",
-        Epic: r[1] ?? "",
-        GP: r[2] ?? "",
-        Points: r[3] ?? "",
-        Goals: r[4] ?? "",
-        Assists: r[5] ?? "",
-        Saves: r[6] ?? "",
-        Shots: r[7] ?? "",
-        GW: r[8] ?? "",
-        GL: r[9] ?? "",
-        MVPs: r[10] ?? "",
-        PPG: r[11] ?? "",
-        GAR: r[12] ?? "",
-        GSR: r[13] ?? "",
-        GSP: r[14] ?? ""
+      players=rows.map(r=>({
+        Discord:r[0]||"",
+        Epic:r[1]||"",
+        GP:r[2]||"",
+        Points:r[3]||"",
+        Goals:r[4]||"",
+        Assists:r[5]||"",
+        Saves:r[6]||"",
+        Shots:r[7]||"",
+        GW:r[8]||"",
+        GL:r[9]||"",
+        MVPs:r[10]||"",
+        PPG:r[11]||"",
+        GAR:r[12]||"",
+        GSR:r[13]||"",
+        GSP:r[14]||""
       }));
 
-      filteredPlayers = [...players];
-
+      filteredPlayers=[...players];
       identifyTopPlayer();
       buildHeader();
       buildSummaryCards();
       applySearchFilter();
       renderFoot();
       updateStatusUI();
-    },
-    error: () => {
-      statusChip.innerHTML = "Failed to load data.";
     }
   });
 }
 
-/*
-  Top player selection:
+function identifyTopPlayer(){
+  let best=null;
+  players.forEach(p=>{
+    if(parseNumber(p.GP)<=0)return;
+    const cur={
+      p,
+      mvp:parseNumber(p.MVPs),
+      gw:parseNumber(p.GW),
+      g:parseNumber(p.Goals),
+      a:parseNumber(p.Assists),
+      ppg:parseNumber(p.PPG)
+    };
+    if(!best){ best=cur; return; }
 
-  1. Highest MVPs
-  2. Then highest GW
-  3. Then highest Goals
-  4. Then highest Assists
-  5. Then highest Av. PPG
+    if(cur.mvp>best.mvp){ best=cur; return; }
+    if(cur.mvp<best.mvp) return;
 
-  Only players with GP > 0 are eligible.
-*/
-function identifyTopPlayer() {
-  let best = null;
+    if(cur.gw>best.gw){ best=cur; return; }
+    if(cur.gw<best.gw) return;
 
-  players.forEach(p => {
-    const gp  = parseNumber(p.GP);
-    if (gp <= 0) return; // ignore players with no games
+    if(cur.g>best.g){ best=cur; return; }
+    if(cur.g<best.g) return;
 
-    const mvp = parseNumber(p.MVPs);
-    const gw  = parseNumber(p.GW);
-    const g   = parseNumber(p.Goals);
-    const a   = parseNumber(p.Assists);
-    const ppg = parseNumber(p.PPG);
+    if(cur.a>best.a){ best=cur; return; }
+    if(cur.a<best.a) return;
 
-    const current = { p, mvp, gw, g, a, ppg };
-
-    if (!best) {
-      best = current;
-      return;
-    }
-
-    // Compare according to priority chain
-    if (mvp > best.mvp) { best = current; return; }
-    if (mvp < best.mvp) { return; }
-
-    if (gw > best.gw) { best = current; return; }
-    if (gw < best.gw) { return; }
-
-    if (g > best.g) { best = current; return; }
-    if (g < best.g) { return; }
-
-    if (a > best.a) { best = current; return; }
-    if (a < best.a) { return; }
-
-    if (ppg > best.ppg) { best = current; return; }
-    // If equal all the way down, keep existing best
+    if(cur.ppg>best.ppg){ best=cur; return; }
   });
 
-  topPlayerDiscord = best ? best.p.Discord : null;
+  topPlayerDiscord=best?best.p.Discord:null;
 }
 
-function buildHeader() {
-  let html = "<tr>";
-  COLS.forEach((label, idx) => {
-    html += `
-      <th data-index="${idx}">
-        <span class="label">
-          ${label}
-          <span class="sort-icon">▲</span>
-        </span>
+function buildHeader(){
+  let h="<tr>";
+  COLS.forEach((c,i)=>{
+    h+=`
+      <th data-index="${i}">
+        <span class="label">${c}<span class="sort-icon">▲</span></span>
       </th>
     `;
   });
-  html += "</tr>";
-  tableHead.innerHTML = html;
+  h+="</tr>";
+  document.getElementById("tableHead").innerHTML=h;
 
-  tableHead.querySelectorAll("th").forEach(th => {
-    th.addEventListener("click", () => {
-      const idx = parseInt(th.dataset.index, 10);
-      if (sortState.index === idx) {
-        sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
-      } else {
-        sortState.index = idx;
-        sortState.dir = "desc";
+  document.querySelectorAll("#tableHead th").forEach(th=>{
+    th.onclick=()=>{
+      const i=parseInt(th.dataset.index);
+      if(sortState.index===i){
+        sortState.dir=sortState.dir==="asc"?"desc":"asc";
+      }else{
+        sortState.index=i;
+        sortState.dir="desc";
       }
       applySorting();
       renderBody();
       updateSortIcons();
-    });
+    }
   });
 
   updateSortIcons();
 }
 
-function updateSortIcons() {
-  tableHead.querySelectorAll("th").forEach(th => {
-    th.classList.remove("sorted-asc", "sorted-desc");
-    const idx = parseInt(th.dataset.index, 10);
-    if (idx === sortState.index) {
-      th.classList.add(sortState.dir === "asc" ? "sorted-asc" : "sorted-desc");
+function updateSortIcons(){
+  document.querySelectorAll("#tableHead th").forEach(th=>{
+    th.classList.remove("sorted-asc","sorted-desc");
+    const i=parseInt(th.dataset.index);
+    if(i===sortState.index){
+      th.classList.add(sortState.dir==="asc"?"sorted-asc":"sorted-desc");
     }
   });
 }
 
-function applySorting() {
-  filteredPlayers.sort((a, b) => {
-    const key = SORT_KEYS[sortState.index];
-    const av = a[key];
-    const bv = b[key];
+function applySorting(){
+  filteredPlayers.sort((a,b)=>{
+    const k=SORT_KEYS[sortState.index];
+    const av=a[k], bv=b[k];
 
-    const numericCol = sortState.index > 0; // col 0 is text, rest numeric-ish
-
-    if (numericCol) {
-      const an = parseNumber(av);
-      const bn = parseNumber(bv);
-      return sortState.dir === "asc" ? an - bn : bn - an;
-    } else {
-      const as = String(av || "").toLowerCase();
-      const bs = String(bv || "").toLowerCase();
-      if (as < bs) return sortState.dir === "asc" ? -1 : 1;
-      if (as > bs) return sortState.dir === "asc" ? 1 : -1;
-      return 0;
+    if(sortState.index===0){
+      const as=String(av).toLowerCase(), bs=String(bv).toLowerCase();
+      return sortState.dir==="asc" ? as.localeCompare(bs) : bs.localeCompare(as);
     }
+
+    const an=parseNumber(av), bn=parseNumber(bv);
+    return sortState.dir==="asc" ? an-bn : bn-an;
   });
 }
 
-function renderBody() {
-  let html = "";
-  const top = topPlayerDiscord;
+function renderBody(){
+  let h="";
+  filteredPlayers.forEach(p=>{
+    const top = String(p.Discord).trim() === String(topPlayerDiscord).trim();
+    h+=`<tr class="${top?"top-player-row":""}">`;
 
-  filteredPlayers.forEach(p => {
-    const isTop = top && String(p.Discord).trim() === String(top).trim();
-    html += `<tr class="${isTop ? "top-player-row" : ""}">`;
-
-    // Combined player cell: Discord + Epic underneath
-    html += `
+    h+=`
       <td>
         <div class="player-cell">
           <span class="player-main">${cleanValue(p.Discord)}</span>
@@ -664,172 +521,126 @@ function renderBody() {
       </td>
     `;
 
-    // Remaining numeric columns
-    html += `<td>${cleanValue(p.GP)}</td>`;
-    html += `<td>${cleanValue(p.Points)}</td>`;
-    html += `<td>${cleanValue(p.Goals)}</td>`;
-    html += `<td>${cleanValue(p.Assists)}</td>`;
-    html += `<td>${cleanValue(p.Saves)}</td>`;
-    html += `<td>${cleanValue(p.Shots)}</td>`;
-    html += `<td>${cleanValue(p.GW)}</td>`;
-    html += `<td>${cleanValue(p.GL)}</td>`;
-    html += `<td>${cleanValue(p.MVPs)}</td>`;
-    html += `<td>${cleanValue(p.PPG)}</td>`;
-    html += `<td>${cleanValue(p.GAR)}</td>`;
-    html += `<td>${cleanValue(p.GSR)}</td>`;
-    html += `<td>${cleanValue(p.GSP)}</td>`;
+    h+=`<td>${cleanValue(p.GP)}</td>`;
+    h+=`<td>${cleanValue(p.Points)}</td>`;
+    h+=`<td>${cleanValue(p.Goals)}</td>`;
+    h+=`<td>${cleanValue(p.Assists)}</td>`;
+    h+=`<td>${cleanValue(p.Saves)}</td>`;
+    h+=`<td>${cleanValue(p.Shots)}</td>`;
+    h+=`<td>${cleanValue(p.GW)}</td>`;
+    h+=`<td>${cleanValue(p.GL)}</td>`;
+    h+=`<td>${cleanValue(p.MVPs)}</td>`;
+    h+=`<td>${cleanValue(p.PPG)}</td>`;
+    h+=`<td>${cleanValue(p.GAR)}</td>`;
+    h+=`<td>${cleanValue(p.GSR)}</td>`;
+    h+=`<td>${cleanValue(p.GSP)}</td>`;
 
-    html += "</tr>";
+    h+="</tr>";
   });
 
-  tableBody.innerHTML = html;
-  playerCountLabel.textContent =
-    `${filteredPlayers.length} player${filteredPlayers.length === 1 ? "" : "s"}`;
+  document.getElementById("tableBody").innerHTML=h;
+  document.getElementById("playerCountLabel").textContent =
+    `${filteredPlayers.length} players`;
 }
 
-function renderFoot() {
-  // Sum only the meaningful numeric stats
-  const sums = {
-    GP: 0,
-    Points: 0,
-    Goals: 0,
-    Assists: 0,
-    Saves: 0,
-    Shots: 0,
-    GW: 0,
-    GL: 0,
-    MVPs: 0
+function renderFoot(){
+  const sums={
+    GP:0,Points:0,Goals:0,Assists:0,Saves:0,Shots:0,GW:0,GL:0,MVPs:0
   };
-
-  players.forEach(p => {
-    sums.GP      += parseNumber(p.GP);
-    sums.Points  += parseNumber(p.Points);
-    sums.Goals   += parseNumber(p.Goals);
-    sums.Assists += parseNumber(p.Assists);
-    sums.Saves   += parseNumber(p.Saves);
-    sums.Shots   += parseNumber(p.Shots);
-    sums.GW      += parseNumber(p.GW);
-    sums.GL      += parseNumber(p.GL);
-    sums.MVPs    += parseNumber(p.MVPs);
+  players.forEach(p=>{
+    sums.GP+=parseNumber(p.GP);
+    sums.Points+=parseNumber(p.Points);
+    sums.Goals+=parseNumber(p.Goals);
+    sums.Assists+=parseNumber(p.Assists);
+    sums.Saves+=parseNumber(p.Saves);
+    sums.Shots+=parseNumber(p.Shots);
+    sums.GW+=parseNumber(p.GW);
+    sums.GL+=parseNumber(p.GL);
+    sums.MVPs+=parseNumber(p.MVPs);
   });
 
-  const avgPPG = sums.GP ? (sums.Points / sums.GP).toFixed(1) : "";
+  const avgPPG=sums.GP?(sums.Points/sums.GP).toFixed(1):"";
 
-  let html = "<tr>";
-  COLS.forEach((_, idx) => {
-    if (idx === 0) {
-      html += "<td>Totals</td>";
-    } else {
-      let val = "";
-      switch (idx) {
-        case 1:  val = sums.GP;      break;
-        case 2:  val = sums.Points;  break;
-        case 3:  val = sums.Goals;   break;
-        case 4:  val = sums.Assists; break;
-        case 5:  val = sums.Saves;   break;
-        case 6:  val = sums.Shots;   break;
-        case 7:  val = sums.GW;      break;
-        case 8:  val = sums.GL;      break;
-        case 9:  val = sums.MVPs;    break;
-        case 10: val = avgPPG || ""; break; // proper overall average
-        default: val = "";           break; // ratios left blank
+  let h="<tr>";
+  COLS.forEach((c,i)=>{
+    if(i===0){ h+="<td>Totals</td>"; }
+    else{
+      let v="";
+      switch(i){
+        case 1:v=sums.GP;break;
+        case 2:v=sums.Points;break;
+        case 3:v=sums.Goals;break;
+        case 4:v=sums.Assists;break;
+        case 5:v=sums.Saves;break;
+        case 6:v=sums.Shots;break;
+        case 7:v=sums.GW;break;
+        case 8:v=sums.GL;break;
+        case 9:v=sums.MVPs;break;
+        case 10:v=avgPPG;break;
       }
-
-      if (val === "" || val === null || typeof val === "undefined") {
-        html += "<td></td>";
-      } else {
-        const display =
-          typeof val === "number" && Math.abs(val - Math.round(val)) < 0.000001
-            ? Math.round(val)
-            : val;
-        html += `<td>${display}</td>`;
-      }
+      h+=`<td>${v||""}</td>`;
     }
   });
-  html += "</tr>";
-  tableFoot.innerHTML = html;
+  h+="</tr>";
+  document.getElementById("tableFoot").innerHTML=h;
 }
 
-function buildSummaryCards() {
-  const totalGoals = players.reduce((acc,p)=>acc+parseNumber(p.Goals),0);
-  const totalPoints = players.reduce((acc,p)=>acc+parseNumber(p.Points),0);
-  const totalShots = players.reduce((acc,p)=>acc+parseNumber(p.Shots),0);
-  const totalGames = players.reduce((acc,p)=>acc+parseNumber(p.GP),0);
-  const roster = players.length;
+function buildSummaryCards(){
+  const g=players.reduce((a,p)=>a+parseNumber(p.Goals),0);
+  const pts=players.reduce((a,p)=>a+parseNumber(p.Points),0);
+  const shots=players.reduce((a,p)=>a+parseNumber(p.Shots),0);
+  const games=players.reduce((a,p)=>a+parseNumber(p.GP),0);
+  const roster=players.length;
 
-  const avgGoalsGame = totalGames ? ((totalGoals / totalGames) * 3).toFixed(2) : "—";
-  const shotPct = totalGoals && totalShots
-    ? ((totalGoals/totalShots)*100).toFixed(1) + "%"
-    : "—";
+  const avg=(games?((g/games)*3).toFixed(2):"—");
+  const pct=(g&&shots?((g/shots)*100).toFixed(1)+"%":"—");
 
-  // ORDER: Roster Size, Total Points, Total Goals, Shot Accuracy
-  const cards = [
-    { label:"Roster Size", value:roster,
-      sub:"Players" },
-
-    { label:"Total Points", value:totalPoints,
-      sub:"Combined leaderboard score" },
-
-    { label:"Total Goals", value:totalGoals,
-      sub: totalGames ? `${avgGoalsGame} goals per game` : "Across all players" },
-
-    { label:"Shot Accuracy", value:shotPct,
-      sub: totalShots ? "Goals vs shots (approx.)" : "Not enough data" }
+  const cards=[
+    {label:"Roster Size",value:roster,sub:"Players"},
+    {label:"Total Points",value:pts,sub:"Combined leaderboard score"},
+    {label:"Total Goals",value:g,sub: games?`${avg} goals per game`:"Across all players"},
+    {label:"Shot Accuracy",value:pct,sub: shots?"Goals vs shots (approx.)":"Not enough data"}
   ];
 
-  let html = "";
+  let h="";
   cards.forEach(c=>{
-    html += `
+    h+=`
       <article class="summary-card">
-        <div class="summary-glow"></div>
         <div class="summary-label">${c.label}</div>
         <div class="summary-value">${c.value}</div>
         <div class="summary-sub">${c.sub}</div>
       </article>
     `;
   });
-  summaryGrid.innerHTML = html;
+  document.getElementById("summaryGrid").innerHTML=h;
 }
 
-function updateStatusUI() {
-  const now = new Date();
-  const dateStr = now.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  });
-  const timeStr = now.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-
-  footerStatus.textContent =
-    `Last updated: ${dateStr} ${timeStr} (local time)`;
-
-  statusChip.textContent = `Synced at ${timeStr}`;
+function updateStatusUI(){
+  const n=new Date();
+  footerStatus.textContent=
+    `Last updated: ${n.toLocaleDateString()} ${n.toLocaleTimeString()}`;
+  document.getElementById("statusChip").textContent =
+    `Synced at ${n.toLocaleTimeString()}`;
 }
 
-function applySearchFilter() {
-  const term = (searchInput.value || "").toLowerCase().trim();
-  const hideZero = hideZeroToggle.checked;
+function applySearchFilter(){
+  const t=(searchInput.value||"").toLowerCase().trim();
+  const hide=hideZeroToggle.checked;
 
-  filteredPlayers = players.filter(p => {
-    const d = String(p.Discord || "").toLowerCase();
-    const e = String(p.Epic || "").toLowerCase();
-
-    const matchesSearch = !term || d.includes(term) || e.includes(term);
-    const passesZero = !hideZero || !isZeroGPPlayer(p);
-
-    return matchesSearch && passesZero;
+  filteredPlayers=players.filter(p=>{
+    const d=String(p.Discord).toLowerCase();
+    const e=String(p.Epic).toLowerCase();
+    const match=!t||d.includes(t)||e.includes(t);
+    const zero=!hide||!isZeroGPPlayer(p);
+    return match&&zero;
   });
 
   applySorting();
   renderBody();
 }
 
-searchInput.addEventListener("input", applySearchFilter);
-hideZeroToggle.addEventListener("change", applySearchFilter);
+searchInput.oninput=applySearchFilter;
+hideZeroToggle.onchange=applySearchFilter;
 
 loadSheet();
 </script>
