@@ -5,6 +5,7 @@
   <title>Verdant Whispers Player Stats</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+  <!-- CSV parser -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
   <style>
@@ -148,11 +149,22 @@
       50% { transform: translateY(-4px); }
     }
 
-    .summary-label { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: #bfdbfe; margin-bottom: 0.2rem; }
+    .summary-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #bfdbfe;
+      margin-bottom: 0.2rem;
+    }
     .summary-value { font-size: 1.2rem; font-weight: 700; }
-    .summary-sub { font-size: 0.72rem; color: #e5e7eb; opacity: 0.85; margin-top: 0.1rem; }
+    .summary-sub {
+      font-size: 0.72rem;
+      color: #e5e7eb;
+      opacity: 0.85;
+      margin-top: 0.1rem;
+    }
 
-    .summary-glow { display: none; }
+    .summary-glow { display: false; }
 
     /* Table card */
     .table-card {
@@ -183,6 +195,7 @@
       color: #e5e7eb;
       min-width: 160px;
       outline: none;
+      box-shadow: 0 0 0 1px transparent;
       transition: 0.15s ease;
     }
 
@@ -195,6 +208,8 @@
       animation: spin 0.7s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    .table-scroll { max-height: 60vh; overflow:auto; }
 
     table { width:100%; border-collapse:collapse; min-width:840px; }
     thead { position: sticky; top:0; z-index:3; background: #020617; }
@@ -228,18 +243,21 @@
     tbody tr:nth-child(odd) { background:rgba(15,23,42,0.9); }
     tbody tr:hover { background:rgba(37,99,235,0.35); }
 
-    .player-cell { display:flex; flex-direction:column; gap:0.08rem; line-height:1.2; }
+    .player-cell { display:flex; flex-direction:row; align-items:center; gap:0.3rem; line-height:1.2; }
+    .player-text { display:flex; flex-direction:column; gap:0.08rem; }
     .player-main { font-size:0.82rem; font-weight:600; }
     .player-sub { font-size:0.72rem; color:#9ca3af; }
 
-    /*  ⭐ GOLD HIGHLIGHT ⭐ */
+    .top-star {
+      font-size: 0.8rem;
+      color: #fbbf24;
+      text-shadow: 0 0 6px rgba(251,191,36,0.8);
+    }
+
+    /* Gold highlight but subtle (no full-row glow) */
     .top-player-row {
-      background: radial-gradient(circle at left, rgba(251,191,36,0.18), rgba(15,23,42,0.95));
       border-left: 3px solid #fbbf24;
-      box-shadow:
-        inset 0 0 0 1px rgba(251,191,36,0.25),
-        0 0 18px rgba(251,191,36,0.35),
-        0 0 6px rgba(245,158,11,0.35);
+      background: linear-gradient(to right, rgba(251,191,36,0.10), rgba(15,23,42,0.98));
     }
 
     tfoot td {
@@ -279,7 +297,6 @@
     .toggle-container input:checked + .toggle-track .toggle-thumb {
       transform: translateX(18px);
     }
-
   </style>
 </head>
 <body>
@@ -336,7 +353,6 @@
 
 
 <script>
-/* Same JS from your last version — unchanged logic */
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
@@ -355,6 +371,16 @@ let filteredPlayers = [];
 let sortState = { index:2, dir:"desc" };
 let topPlayerDiscord = null;
 
+const tableHead = document.getElementById("tableHead");
+const tableBody = document.getElementById("tableBody");
+const tableFoot = document.getElementById("tableFoot");
+const summaryGrid = document.getElementById("summaryGrid");
+const searchInput = document.getElementById("searchInput");
+const hideZeroToggle = document.getElementById("hideZeroToggle");
+const playerCountLabel = document.getElementById("playerCountLabel");
+const statusChip = document.getElementById("statusChip");
+const footerStatus = document.getElementById("footerStatus");
+
 function parseNumber(v){
   if(v==null)return 0;
   const s=String(v);
@@ -362,14 +388,12 @@ function parseNumber(v){
   const m=s.match(/-?\d+(\.\d+)?/);
   return m?parseFloat(m[0]):0;
 }
-
 function cleanValue(v){
   if(v==null)return "—";
   const s=String(v).trim();
   if(!s||/#(DIV|REF|VALUE)!/i.test(s))return "—";
   return s;
 }
-
 function isZeroGPPlayer(p){ return parseNumber(p.GP)===0; }
 
 function loadSheet(){
@@ -381,12 +405,11 @@ function loadSheet(){
       let rows=res.data||[];
 
       rows=rows.filter(r=>r.some(c=>String(c).trim()!==""));
-
       rows=rows.filter(r=>{
         const a=String(r[0]||"").trim().toLowerCase();
-        if(!a) return false;
-        if(a.includes("whole team")) return false;
-        if(a==="discord") return false;
+        if(!a)return false;
+        if(a.includes("whole team"))return false;
+        if(a==="discord")return false;
         return true;
       });
 
@@ -419,6 +442,8 @@ function loadSheet(){
   });
 }
 
+/* Top player logic:
+   MVPs -> GW -> Goals -> Assists -> Av. PPG (PPG column) ; GP > 0 only */
 function identifyTopPlayer(){
   let best=null;
   players.forEach(p=>{
@@ -448,7 +473,7 @@ function identifyTopPlayer(){
     if(cur.ppg>best.ppg){ best=cur; return; }
   });
 
-  topPlayerDiscord=best?best.p.Discord:null;
+  topPlayerDiscord = best ? best.p.Discord : null;
 }
 
 function buildHeader(){
@@ -457,17 +482,16 @@ function buildHeader(){
     h+=`
       <th data-index="${i}">
         <span class="label">${c}<span class="sort-icon">▲</span></span>
-      </th>
-    `;
+      </th>`;
   });
   h+="</tr>";
-  document.getElementById("tableHead").innerHTML=h;
+  tableHead.innerHTML=h;
 
-  document.querySelectorAll("#tableHead th").forEach(th=>{
+  tableHead.querySelectorAll("th").forEach(th=>{
     th.onclick=()=>{
-      const i=parseInt(th.dataset.index);
+      const i=parseInt(th.dataset.index,10);
       if(sortState.index===i){
-        sortState.dir=sortState.dir==="asc"?"desc":"asc";
+        sortState.dir = sortState.dir==="asc"?"desc":"asc";
       }else{
         sortState.index=i;
         sortState.dir="desc";
@@ -475,16 +499,16 @@ function buildHeader(){
       applySorting();
       renderBody();
       updateSortIcons();
-    }
+    };
   });
 
   updateSortIcons();
 }
 
 function updateSortIcons(){
-  document.querySelectorAll("#tableHead th").forEach(th=>{
+  tableHead.querySelectorAll("th").forEach(th=>{
     th.classList.remove("sorted-asc","sorted-desc");
-    const i=parseInt(th.dataset.index);
+    const i=parseInt(th.dataset.index,10);
     if(i===sortState.index){
       th.classList.add(sortState.dir==="asc"?"sorted-asc":"sorted-desc");
     }
@@ -493,14 +517,13 @@ function updateSortIcons(){
 
 function applySorting(){
   filteredPlayers.sort((a,b)=>{
-    const k=SORT_KEYS[sortState.index];
-    const av=a[k], bv=b[k];
+    const key=SORT_KEYS[sortState.index];
+    const av=a[key], bv=b[key];
 
     if(sortState.index===0){
       const as=String(av).toLowerCase(), bs=String(bv).toLowerCase();
       return sortState.dir==="asc" ? as.localeCompare(bs) : bs.localeCompare(as);
     }
-
     const an=parseNumber(av), bn=parseNumber(bv);
     return sortState.dir==="asc" ? an-bn : bn-an;
   });
@@ -508,15 +531,20 @@ function applySorting(){
 
 function renderBody(){
   let h="";
+  const top = String(topPlayerDiscord||"").trim().toLowerCase();
+
   filteredPlayers.forEach(p=>{
-    const top = String(p.Discord).trim() === String(topPlayerDiscord).trim();
-    h+=`<tr class="${top?"top-player-row":""}">`;
+    const isTop = String(p.Discord||"").trim().toLowerCase() === top;
+    h+=`<tr class="${isTop?"top-player-row":""}">`;
 
     h+=`
       <td>
         <div class="player-cell">
-          <span class="player-main">${cleanValue(p.Discord)}</span>
-          <span class="player-sub">${cleanValue(p.Epic)}</span>
+          ${isTop ? '<span class="top-star">★</span>' : ''}
+          <div class="player-text">
+            <span class="player-main">${cleanValue(p.Discord)}</span>
+            <span class="player-sub">${cleanValue(p.Epic)}</span>
+          </div>
         </div>
       </td>
     `;
@@ -538,15 +566,12 @@ function renderBody(){
     h+="</tr>";
   });
 
-  document.getElementById("tableBody").innerHTML=h;
-  document.getElementById("playerCountLabel").textContent =
-    `${filteredPlayers.length} players`;
+  tableBody.innerHTML=h;
+  playerCountLabel.textContent = `${filteredPlayers.length} player${filteredPlayers.length===1?"":"s"}`;
 }
 
 function renderFoot(){
-  const sums={
-    GP:0,Points:0,Goals:0,Assists:0,Saves:0,Shots:0,GW:0,GL:0,MVPs:0
-  };
+  const sums={ GP:0,Points:0,Goals:0,Assists:0,Saves:0,Shots:0,GW:0,GL:0,MVPs:0 };
   players.forEach(p=>{
     sums.GP+=parseNumber(p.GP);
     sums.Points+=parseNumber(p.Points);
@@ -558,11 +583,10 @@ function renderFoot(){
     sums.GL+=parseNumber(p.GL);
     sums.MVPs+=parseNumber(p.MVPs);
   });
-
   const avgPPG=sums.GP?(sums.Points/sums.GP).toFixed(1):"";
 
   let h="<tr>";
-  COLS.forEach((c,i)=>{
+  COLS.forEach((_,i)=>{
     if(i===0){ h+="<td>Totals</td>"; }
     else{
       let v="";
@@ -582,24 +606,24 @@ function renderFoot(){
     }
   });
   h+="</tr>";
-  document.getElementById("tableFoot").innerHTML=h;
+  tableFoot.innerHTML=h;
 }
 
 function buildSummaryCards(){
-  const g=players.reduce((a,p)=>a+parseNumber(p.Goals),0);
-  const pts=players.reduce((a,p)=>a+parseNumber(p.Points),0);
+  const goals=players.reduce((a,p)=>a+parseNumber(p.Goals),0);
+  const points=players.reduce((a,p)=>a+parseNumber(p.Points),0);
   const shots=players.reduce((a,p)=>a+parseNumber(p.Shots),0);
   const games=players.reduce((a,p)=>a+parseNumber(p.GP),0);
   const roster=players.length;
 
-  const avg=(games?((g/games)*3).toFixed(2):"—");
-  const pct=(g&&shots?((g/shots)*100).toFixed(1)+"%":"—");
+  const avgGoalsGame=games?((goals/games)*3).toFixed(2):"—";
+  const shotPct=goals&&shots?((goals/shots)*100).toFixed(1)+"%":"—";
 
   const cards=[
     {label:"Roster Size",value:roster,sub:"Players"},
-    {label:"Total Points",value:pts,sub:"Combined leaderboard score"},
-    {label:"Total Goals",value:g,sub: games?`${avg} goals per game`:"Across all players"},
-    {label:"Shot Accuracy",value:pct,sub: shots?"Goals vs shots (approx.)":"Not enough data"}
+    {label:"Total Points",value:points,sub:"Combined leaderboard score"},
+    {label:"Total Goals",value:goals,sub:games?`${avgGoalsGame} goals per game`:"Across all players"},
+    {label:"Shot Accuracy",value:shotPct,sub:shots?"Goals vs shots (approx.)":"Not enough data"}
   ];
 
   let h="";
@@ -609,38 +633,35 @@ function buildSummaryCards(){
         <div class="summary-label">${c.label}</div>
         <div class="summary-value">${c.value}</div>
         <div class="summary-sub">${c.sub}</div>
-      </article>
-    `;
+      </article>`;
   });
-  document.getElementById("summaryGrid").innerHTML=h;
+  summaryGrid.innerHTML=h;
 }
 
 function updateStatusUI(){
   const n=new Date();
-  footerStatus.textContent=
-    `Last updated: ${n.toLocaleDateString()} ${n.toLocaleTimeString()}`;
-  document.getElementById("statusChip").textContent =
-    `Synced at ${n.toLocaleTimeString()}`;
+  footerStatus.textContent=`Last updated: ${n.toLocaleDateString()} ${n.toLocaleTimeString()}`;
+  statusChip.textContent=`Synced at ${n.toLocaleTimeString()}`;
 }
 
 function applySearchFilter(){
-  const t=(searchInput.value||"").toLowerCase().trim();
+  const term=(searchInput.value||"").toLowerCase().trim();
   const hide=hideZeroToggle.checked;
 
   filteredPlayers=players.filter(p=>{
-    const d=String(p.Discord).toLowerCase();
-    const e=String(p.Epic).toLowerCase();
-    const match=!t||d.includes(t)||e.includes(t);
-    const zero=!hide||!isZeroGPPlayer(p);
-    return match&&zero;
+    const d=String(p.Discord||"").toLowerCase();
+    const e=String(p.Epic||"").toLowerCase();
+    const matches=!term||d.includes(term)||e.includes(term);
+    const passes=!hide||!isZeroGPPlayer(p);
+    return matches&&passes;
   });
 
   applySorting();
   renderBody();
 }
 
-searchInput.oninput=applySearchFilter;
-hideZeroToggle.onchange=applySearchFilter;
+searchInput.addEventListener("input",applySearchFilter);
+hideZeroToggle.addEventListener("change",applySearchFilter);
 
 loadSheet();
 </script>
