@@ -249,11 +249,10 @@
       text-align:left;
       position:sticky; left:0; background:inherit; z-index:4;
     }
-    th:nth-child(2), td:nth-child(2) { text-align:left; }
 
-    /* Center-align all numeric columns for equal spacing */
-    th:not(:first-child):not(:nth-child(2)),
-    td:not(:first-child):not(:nth-child(2)) {
+    /* Center-align all non-player columns */
+    th:not(:first-child),
+    td:not(:first-child) {
       text-align: center;
     }
 
@@ -389,7 +388,6 @@
           <div class="table-subtitle" id="playerCountLabel">Loading players…</div>
         </div>
         <div class="controls">
-
           <label class="toggle-container">
             <input type="checkbox" id="hideZeroToggle" checked>
             <span class="toggle-track">
@@ -424,14 +422,36 @@
 const SHEET_CSV_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQf9uGWRo14fnf7NgqImA5H1yiHvuEzysPOnvKYn2EaVITGF2dBBGdctMGGISUbIaX9h8CNGgLPAWjC/pub?gid=254200409&single=true&output=csv";
 
+/*
+  We now have ONE visible player column ("Player") that
+  shows Discord (bold) and Epic (smaller) together.
+*/
 const COLS = [
-  "Discord","Epic","GP","Points","Goals","Assists","Saves",
+  "Player","GP","Points","Goals","Assists","Saves",
   "Shots","GW","GL","MVPs","Av. PPG","GA Ratio","GS Ratio","GS %"
 ];
 
+// For sorting: which data field each column uses
+const SORT_KEYS = {
+  0: "Discord", // sort Player column by Discord name
+  1: "GP",
+  2: "Points",
+  3: "Goals",
+  4: "Assists",
+  5: "Saves",
+  6: "Shots",
+  7: "GW",
+  8: "GL",
+  9: "MVPs",
+ 10: "PPG",
+ 11: "GAR",
+ 12: "GSR",
+ 13: "GSP"
+};
+
 let players = [];
 let filteredPlayers = [];
-let sortState = { index: 3, dir: "desc" }; 
+let sortState = { index: 2, dir: "desc" }; // default: Points desc (col 2)
 let topPlayerDiscord = null;
 
 const tableHead = document.getElementById("tableHead");
@@ -576,12 +596,11 @@ function updateSortIcons() {
 
 function applySorting() {
   filteredPlayers.sort((a, b) => {
-    const keys = Object.keys(a);
-    const key = keys[sortState.index];
+    const key = SORT_KEYS[sortState.index];
     const av = a[key];
     const bv = b[key];
 
-    const numericCol = sortState.index > 1;
+    const numericCol = sortState.index > 0; // col 0 is text, rest numeric-ish
 
     if (numericCol) {
       const an = parseNumber(av);
@@ -605,6 +624,7 @@ function renderBody() {
     const isTop = top && String(p.Discord).trim() === String(top).trim();
     html += `<tr class="${isTop ? "top-player-row" : ""}">`;
 
+    // Combined player cell: Discord + Epic underneath
     html += `
       <td>
         <div class="player-cell">
@@ -615,7 +635,7 @@ function renderBody() {
       </td>
     `;
 
-    html += `<td>${cleanValue(p.Epic)}</td>`;
+    // Remaining numeric columns
     html += `<td>${cleanValue(p.GP)}</td>`;
     html += `<td>${cleanValue(p.Points)}</td>`;
     html += `<td>${cleanValue(p.Goals)}</td>`;
@@ -639,30 +659,61 @@ function renderBody() {
 }
 
 function renderFoot() {
-  const totals = new Array(COLS.length).fill(0);
+  // Sum only the meaningful numeric stats
+  const sums = {
+    GP: 0,
+    Points: 0,
+    Goals: 0,
+    Assists: 0,
+    Saves: 0,
+    Shots: 0,
+    GW: 0,
+    GL: 0,
+    MVPs: 0
+  };
 
   players.forEach(p => {
-    const vals = [
-      p.Discord,p.Epic,p.GP,p.Points,p.Goals,p.Assists,p.Saves,
-      p.Shots,p.GW,p.GL,p.MVPs,p.PPG,p.GAR,p.GSR,p.GSP
-    ];
-    vals.forEach((v, idx) => {
-      if (idx <= 1) return;
-      totals[idx] += parseNumber(v);
-    });
+    sums.GP      += parseNumber(p.GP);
+    sums.Points  += parseNumber(p.Points);
+    sums.Goals   += parseNumber(p.Goals);
+    sums.Assists += parseNumber(p.Assists);
+    sums.Saves   += parseNumber(p.Saves);
+    sums.Shots   += parseNumber(p.Shots);
+    sums.GW      += parseNumber(p.GW);
+    sums.GL      += parseNumber(p.GL);
+    sums.MVPs    += parseNumber(p.MVPs);
   });
+
+  const avgPPG = sums.GP ? (sums.Points / sums.GP).toFixed(1) : "";
 
   let html = "<tr>";
   COLS.forEach((_, idx) => {
-    if (idx === 0) html += "<td>Totals</td>";
-    else if (idx === 1) html += "<td></td>";
-    else {
-      const sum = totals[idx];
-      if (!sum) html += "<td></td>";
-      else {
-        const rounded =
-          Math.abs(sum - Math.round(sum)) < 0.000001 ? Math.round(sum) : sum.toFixed(1);
-        html += `<td>${rounded}</td>`;
+    if (idx === 0) {
+      html += "<td>Totals</td>";
+    } else {
+      let val = "";
+      switch (idx) {
+        case 1:  val = sums.GP;      break;
+        case 2:  val = sums.Points;  break;
+        case 3:  val = sums.Goals;   break;
+        case 4:  val = sums.Assists; break;
+        case 5:  val = sums.Saves;   break;
+        case 6:  val = sums.Shots;   break;
+        case 7:  val = sums.GW;      break;
+        case 8:  val = sums.GL;      break;
+        case 9:  val = sums.MVPs;    break;
+        case 10: val = avgPPG || ""; break; // proper overall average
+        default: val = "";           break; // ratios left blank
+      }
+
+      if (val === "" || val === null || typeof val === "undefined") {
+        html += "<td></td>";
+      } else {
+        const display =
+          typeof val === "number" && Math.abs(val - Math.round(val)) < 0.000001
+            ? Math.round(val)
+            : val;
+        html += `<td>${display}</td>`;
       }
     }
   });
